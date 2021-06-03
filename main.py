@@ -16,6 +16,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.timer_checkout = QtCore.QTimer()
         self.timer_update = QtCore.QTimer()
+        self.timer_key = QtCore.QTimer()
         self.slot_init()
 
         self.flag_get_frame_mode = 0
@@ -23,8 +24,56 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.serial_status = False
         self.data_is_ready = False
 
+        self.key_command_dict = {
+            81: "shoot once",    # q
+            87: "5".encode(),    # w - forward
+            69: "continus shoot",  # e
+            65: "3".encode(),    # a - left
+            83: "6".encode(),    # s - backward
+            68: "4".encode(),    # r - right
+            88: "2".encode(),    # space - stop
+            16777216: "7".encode()  # esc
+        }
+
+        self.key_continus_shoot = False
+
+        self.key_working = False
+        self.status_continus_shoot = False
+
     def keyPressEvent(self, e):
-        print(e.key())
+        key = e.key()
+        if not self.key_working:
+            if key in self.key_command_dict:
+                if key == 69:
+                    if not self.key_continus_shoot:
+                        self.key_continus_shoot = True
+                        self.get_in_realtime()
+                    return
+
+                if key == 81:
+                    self.get_one_frame()
+                    return
+
+                send_thread = Thread(target=self.send_command, args=(key,))
+                send_thread.start()
+
+    def keyReleaseEvent(self, e):
+        if e.key() == 69:
+            self.key_continus_shoot = False
+
+    def send_command(self, key):
+        print(f"send key {self.key_command_dict[key]}")
+        for i in range(20):
+            self.ser.write(self.key_command_dict[key])
+            #self.ser.write('6'.encode())
+        time.sleep(0.1)
+        for i in range(20):
+            self.ser.write("0".encode())
+        self.key_working = False
+        print(f"stop sending key {key}")
+
+    def update_keyboard(self):
+        pass
 
     def slot_init(self):
         self.button_get_one.clicked.connect(self.get_one_frame)
@@ -33,8 +82,6 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_serial.clicked.connect(self.toggle_serial)
         self.timer_checkout.timeout.connect(self.check_timeout)
         self.timer_update.timeout.connect(self.update_ui)
-
-        self.edit_port.setEnabled(False)
 
     def toggle_serial(self):
         # init serial
@@ -57,15 +104,16 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.edit_port.setEnabled(True)
 
     def get_one_frame(self):
-        self.button_get_one.setEnabled(False)
-        self.button_get_in_realtime.setEnabled(False)
-        self.button_get_one.setText("Getting Frame...")
-        self.flag_get_frame_mode = 1
-        self.working = True
-        self.get_frame_thread = Thread(target=self.get_frame)
-        self.get_frame_thread.start()
-        self.timer_checkout.start(5000)
-        self.timer_update.start(500)
+        if (self.flag_get_frame_mode == 0):
+            self.button_get_one.setEnabled(False)
+            self.button_get_in_realtime.setEnabled(False)
+            self.button_get_one.setText("Getting Frame...")
+            self.flag_get_frame_mode = 1
+            self.working = True
+            self.get_frame_thread = Thread(target=self.get_frame)
+            self.get_frame_thread.start()
+            self.timer_checkout.start(5000)
+            self.timer_update.start(500)
 
     def get_in_realtime(self):
         if (self.flag_get_frame_mode == 0):
@@ -110,6 +158,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def get_frame(self):
         command = '1'.encode()
 
+        print("sending get frame")
         for i in range(20):
             self.ser.write(command)
 
@@ -143,7 +192,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.edit_camera.append(f"Serial received {count} data, retrying...")
 
         time.sleep(0.01)
-        print("ending")
+        print("sending end get frame")
         for i in range(20):
             self.ser.write("0".encode())
         #self.check_timeout()
@@ -170,6 +219,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def check_timeout(self):
         self.working = False
         self.timer_checkout.stop()
+        print("sending timeout")
         for i in range(20):
             self.ser.write("0".encode())
         self.button_get_one.setText("Get One Frame")
@@ -181,10 +231,6 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-    #MainWindow = QtWidgets.QMainWindow()
-
     ui = Ui_MainWindow_Son()
-    #MainWindow.setFixedSize(MainWindow.width(), MainWindow.height())
-
     ui.show()
     sys.exit(app.exec_())
