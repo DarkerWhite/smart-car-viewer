@@ -31,7 +31,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             65: "3".encode(),    # a - left
             83: "6".encode(),    # s - backward
             68: "4".encode(),    # r - right
-            88: "2".encode(),    # space - stop
+            75: "2".encode(),    # space - stop
             16777216: "7".encode()  # esc
         }
 
@@ -56,6 +56,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
                 send_thread = Thread(target=self.send_command, args=(key,))
                 send_thread.start()
+        print("exited keypress")
 
     def keyReleaseEvent(self, e):
         if e.key() == 69:
@@ -63,11 +64,10 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def send_command(self, key):
         print(f"send key {self.key_command_dict[key]}")
-        for i in range(20):
+        for i in range(10):
             self.ser.write(self.key_command_dict[key])
-            #self.ser.write('6'.encode())
         time.sleep(0.1)
-        for i in range(20):
+        for i in range(10):
             self.ser.write("0".encode())
         self.key_working = False
         print(f"stop sending key {key}")
@@ -82,6 +82,39 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_serial.clicked.connect(self.toggle_serial)
         self.timer_checkout.timeout.connect(self.check_timeout)
         self.timer_update.timeout.connect(self.update_ui)
+
+        self.button_thres_up.clicked.connect(self.send_thres_up)
+        self.button_thres_down.clicked.connect(self.send_thres_down)
+        self.button_distance_up.clicked.connect(self.send_dis_up)
+        self.button_distance_down.clicked.connect(self.send_dis_down)
+
+    def send_thres_up(self):
+        for i in range(10):
+            self.ser.write('a'.encode())
+        time.sleep(0.1)
+        for i in range(10):
+            self.ser.write("0".encode())
+
+    def send_thres_down(self):
+        for i in range(10):
+            self.ser.write('b'.encode())
+        time.sleep(0.1)
+        for i in range(10):
+            self.ser.write("0".encode())
+
+    def send_dis_up(self):
+        for i in range(10):
+            self.ser.write('c'.encode())
+        time.sleep(0.1)
+        for i in range(10):
+            self.ser.write("0".encode())
+
+    def send_dis_down(self):
+        for i in range(10):
+            self.ser.write('d'.encode())
+        time.sleep(0.1)
+        for i in range(10):
+            self.ser.write("0".encode())
 
     def toggle_serial(self):
         # init serial
@@ -112,7 +145,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.working = True
             self.get_frame_thread = Thread(target=self.get_frame)
             self.get_frame_thread.start()
-            self.timer_checkout.start(5000)
+            self.timer_checkout.start(2000)
             self.timer_update.start(500)
 
     def get_in_realtime(self):
@@ -159,7 +192,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         command = '1'.encode()
 
         print("sending get frame")
-        for i in range(20):
+        for i in range(10):
             self.ser.write(command)
 
         while self.working is True:
@@ -193,7 +226,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         time.sleep(0.01)
         print("sending end get frame")
-        for i in range(20):
+        for i in range(10):
             self.ser.write("0".encode())
         #self.check_timeout()
 
@@ -219,8 +252,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def check_timeout(self):
         self.working = False
         self.timer_checkout.stop()
-        print("sending timeout")
-        for i in range(20):
+        print("sending timeout info")
+        for i in range(10):
             self.ser.write("0".encode())
         self.button_get_one.setText("Get One Frame")
         self.button_get_one.setEnabled(True)
