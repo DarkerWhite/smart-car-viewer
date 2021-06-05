@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import serial
 import time
+import serial
+from functools import partial
 from ui import Ui_MainWindow
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -10,24 +11,25 @@ from PyQt5.QtWidgets import QMainWindow
 
 class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
-
         QMainWindow.__init__(self, parent=parent)
         self.setupUi(self)
 
         self.timer_checkout = QtCore.QTimer()
         self.timer_update = QtCore.QTimer()
-        self.timer_key = QtCore.QTimer()
+        self.timer_key_command = QtCore.QTimer()
+        self.timer_check_serial_available = QtCore.QTimer()
         self.slot_init()
 
         self.flag_get_frame_mode = 0
         self.working = False
         self.serial_status = False
         self.data_is_ready = False
+        self.need_cleaning = False
 
         self.key_command_dict = {
-            81: "shoot once",    # q
+            81: self.get_one_frame,    # q
             87: "5".encode(),    # w - forward
-            69: "continus shoot",  # e
+            69: self.get_in_realtime,  # e
             65: "3".encode(),    # a - left
             83: "6".encode(),    # s - backward
             68: "4".encode(),    # r - right
@@ -35,86 +37,94 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             16777216: "7".encode()  # esc
         }
 
-        self.key_continus_shoot = False
+        # bytes type: need to be send
+        # function type: [need to be send, key is pressed]
+        self.key_status_dict = {
+            81: [False, False],
+            87: False,
+            69: [False, False],
+            65: False,
+            83: False,
+            68: False,
+            75: False,
+            16777216: False
+        }
 
-        self.key_working = False
-        self.status_continus_shoot = False
+        self.parameter_command_dict = {
+            self.button_thres_up: "a".encode(),
+            self.button_thres_down: "b".encode(),
+            self.button_distance_up: "c".encode(),
+            self.button_distance_down: "d".encode()
+        }
 
     def keyPressEvent(self, e):
-        key = e.key()
-        if not self.key_working:
-            if key in self.key_command_dict:
-                if key == 69:
-                    if not self.key_continus_shoot:
-                        self.key_continus_shoot = True
-                        self.get_in_realtime()
-                    return
-
-                if key == 81:
-                    self.get_one_frame()
-                    return
-
-                send_thread = Thread(target=self.send_command, args=(key,))
-                send_thread.start()
-        print("exited keypress")
+        #print(e.key())
+        if e.key() in self.key_command_dict:
+            if isinstance(self.key_command_dict[e.key()], bytes):
+                self.key_status_dict[e.key()] = True
+            else:
+                self.key_status_dict[e.key()][1] = True
+                self.key_status_dict[e.key()][0] = True
 
     def keyReleaseEvent(self, e):
-        if e.key() == 69:
-            self.key_continus_shoot = False
+        if e.key() in self.key_command_dict:
+            if isinstance(self.key_command_dict[e.key()], bytes):
+                self.key_status_dict[e.key()] = False
+            else:
+                self.key_status_dict[e.key()][1] = False
 
     def send_command(self, key):
-        print(f"send key {self.key_command_dict[key]}")
-        for i in range(10):
-            self.ser.write(self.key_command_dict[key])
+        #print(f"send key {key}")
+        #for i in range(20):
+        self.ser.write(key)
         time.sleep(0.1)
-        for i in range(10):
-            self.ser.write("0".encode())
-        self.key_working = False
-        print(f"stop sending key {key}")
+        #for i in range(20):
+        self.ser.write("0".encode())
+        time.sleep(0.1)
+        #print(f"stop sending key {key}")
 
-    def update_keyboard(self):
-        pass
+    def send_key_command(self):
+        for i in self.key_status_dict:
+            if isinstance(self.key_command_dict[i], bytes):
+                if self.key_status_dict[i] is True:
+                    self.send_command(self.key_command_dict[i])
+                    self.key_status_dict[i] = False
+            elif self.key_status_dict[i][0] is True:
+                if self.key_status_dict[i][1] is False and self.working is False:
+                    self.working = True
+                    self.key_command_dict[i]()
+                    print("started a thread")
 
     def slot_init(self):
         self.button_get_one.clicked.connect(self.get_one_frame)
         self.button_get_in_realtime.clicked.connect(self.get_in_realtime)
         self.button_sync.clicked.connect(self.sync_parameter)
         self.button_serial.clicked.connect(self.toggle_serial)
+
         self.timer_checkout.timeout.connect(self.check_timeout)
         self.timer_update.timeout.connect(self.update_ui)
+        self.timer_key_command.timeout.connect(self.send_key_command)
+        self.timer_check_serial_available.timeout.connect(self.check_serial)
 
-        self.button_thres_up.clicked.connect(self.send_thres_up)
-        self.button_thres_down.clicked.connect(self.send_thres_down)
-        self.button_distance_up.clicked.connect(self.send_dis_up)
-        self.button_distance_down.clicked.connect(self.send_dis_down)
+        self.timer_key_command.start(50)
+        self.timer_check_serial_available.start(200)
+        self.timer_update.start(500)
 
-    def send_thres_up(self):
-        for i in range(10):
-            self.ser.write('a'.encode())
-        time.sleep(0.1)
-        for i in range(10):
-            self.ser.write("0".encode())
+        # parameter button
+        self.button_thres_up.clicked.connect(partial(self.handle_paramerter_key, self.button_thres_up))
+        self.button_thres_down.clicked.connect(partial(self.handle_paramerter_key, self.button_thres_down))
+        self.button_distance_up.clicked.connect(partial(self.handle_paramerter_key, self.button_distance_up))
+        self.button_distance_down.clicked.connect(partial(self.handle_paramerter_key, self.button_distance_down))
 
-    def send_thres_down(self):
-        for i in range(10):
-            self.ser.write('b'.encode())
-        time.sleep(0.1)
-        for i in range(10):
-            self.ser.write("0".encode())
-
-    def send_dis_up(self):
-        for i in range(10):
-            self.ser.write('c'.encode())
-        time.sleep(0.1)
-        for i in range(10):
-            self.ser.write("0".encode())
-
-    def send_dis_down(self):
-        for i in range(10):
-            self.ser.write('d'.encode())
-        time.sleep(0.1)
-        for i in range(10):
-            self.ser.write("0".encode())
+    def handle_paramerter_key(self, btn):
+        command = self.parameter_command_dict[btn]
+        print(f"sending {command}")
+        #for i in range(10):
+        self.serwrite(command)
+        time.sleep(0.05)
+        #for i in range(10):
+        self.serwrite('0'.encode())
+        time.sleep(0.05)
 
     def toggle_serial(self):
         # init serial
@@ -137,29 +147,37 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.edit_port.setEnabled(True)
 
     def get_one_frame(self):
+        print("in function get one frame")
         if (self.flag_get_frame_mode == 0):
             self.button_get_one.setEnabled(False)
             self.button_get_in_realtime.setEnabled(False)
             self.button_get_one.setText("Getting Frame...")
+
             self.flag_get_frame_mode = 1
             self.working = True
+
             self.get_frame_thread = Thread(target=self.get_frame)
             self.get_frame_thread.start()
-            self.timer_checkout.start(2000)
-            self.timer_update.start(500)
+
+            #self.timer_checkout.start(2000)
 
     def get_in_realtime(self):
         if (self.flag_get_frame_mode == 0):
             self.button_get_one.setEnabled(False)
             self.button_get_in_realtime.setText("Stop Getting Frames")
+
             self.flag_get_frame_mode = 2
             self.working = True
+
+            self.get_frame_thread = Thread(target=self.get_frame)
             self.get_frame_thread.start()
+
             self.timer_update.start(500)
         elif (self.flag_get_frame_mode == 2):
             self.working = False
-            time.sleep(0.5)
             self.flag_get_frame_mode = 0
+            time.sleep(0.5)
+
             self.button_get_one.setEnabled(True)
             self.button_get_in_realtime.setText("Get In Realtime")
 
@@ -186,22 +204,28 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             string_list.append(string_row_head + string_row_body)
         self.string_total = "".join(string_list)
         #print(self.string_total)
-        self.data_is_ready = True
+        self.data_is_ready = 1
 
     def get_frame(self):
-        command = '1'.encode()
-
         print("sending get frame")
-        for i in range(10):
-            self.ser.write(command)
+        #for i in range(20):
+        self.ser.write('1'.encode())
+        time.sleep(0.1)
+        if (self.flag_get_frame_mode != 2):
+            #for i in range(20):
+            self.ser.write('0'.encode())
+            time.sleep(0.2)
 
-        while self.working is True:
-            time.sleep(0.5)
+        failed_times = 0
+        while self.working:
+            print("in thread")
             count = self.ser.inWaiting()
 
             if count > 0:
+                print("count", count)
                 recvData = self.ser.readline()
                 if len(recvData) >= 900:
+                    failed_times = 0
                     recv = recvData.decode()
                     recv = recv[:-1].split(",")
                     self.dataDict = {
@@ -212,28 +236,52 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                         "detectRight": recv[4][:-1].split(" "),
                         "status": recv[5][:-1].split(" ")
                     }
-                    print(self.dataDict)
 
                     self.get_dataset()
                     current_time = time.strftime("%H:%M:%S", time.localtime())
                     self.label_time.setText(current_time)
                     if (self.flag_get_frame_mode == 1):
-                        break
+                        print("exiting one shot")
+                        self.key_status_dict[81][0] = False
+                        self.flag_get_frame_mode = 0
+                        self.working = False
+                        self.need_cleaning = True
+                        return
                 else:
-                    self.edit_camera.append(f"Got {len(recvData)} bytes, retrying...")
+                    print(f"Got {len(recvData)} bytes, retrying...")
+                    failed_times += 1
             else:
-                self.edit_camera.append(f"Serial received {count} data, retrying...")
+                print(f"Serial received {count} data, retrying...")
+                failed_times += 1
 
-        time.sleep(0.01)
-        print("sending end get frame")
-        for i in range(10):
-            self.ser.write("0".encode())
-        #self.check_timeout()
+            time.sleep(0.5)
+            if failed_times > 3:
+                print("max trial time reached, stopped getting frame")
+                self.data_is_ready = -1
+                self.key_status_dict[81][0] = False
+                self.flag_get_frame_mode = 0
+                self.working = False
+                return
+
+        # self.working is False
+        self.ser.write('0'.encode())
+        time.sleep(0.1)
+        self.key_status_dict[69][0] = False
+        self.flag_get_frame_mode = 0
 
     def update_ui(self):
-        print("trying to update")
-        if (self.data_is_ready):
-            print("got update")
+        # get shot failed
+        if (self.data_is_ready == -1):
+            pass
+
+        # successfully got one pic, need to do something
+        if (self.need_cleaning == True):
+            self.button_get_one.setText("Get One Frame")
+            self.button_get_one.setEnabled(True)
+            self.button_get_in_realtime.setEnabled(True)
+
+        # the data is ready
+        if (self.data_is_ready == 1):
             self.edit_camera.setText(self.string_total)
             self.edit_error.setText(self.dataDict['status'][0])
             self.edit_slope.setText(self.dataDict['status'][1])
@@ -242,9 +290,11 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.edit_roundabout.setText(self.dataDict['status'][4])
             self.edit_three_way_fork.setText(self.dataDict['status'][5])
 
-            self.data_is_ready = False
-            if (self.flag_get_frame_mode):
-                self.timer_update.stop()
+            self.data_is_ready = 0
+
+        #if (self.flag_get_frame_mode == 0):
+        #    self.timer_update.stop()
+        #    self.data_is_ready = 0
 
     def sync_parameter(self):
         pass
@@ -261,6 +311,9 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.flag_get_frame_mode = 0
         self.data_is_ready = False
         self.timer_update.stop()
+
+    def check_serial(self):
+        pass
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
