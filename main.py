@@ -13,6 +13,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
         self.setupUi(self)
+        #self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        self.setFixedSize(self.width(), self.height())
 
         self.timer_checkout = QtCore.QTimer()
         self.timer_update = QtCore.QTimer()
@@ -44,6 +46,12 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_turn_p_down: "f".encode(),           # dec p of turning loop
             self.button_turn_d_up: "g".encode(),           # add d of turning loop
             self.button_turn_d_down: "h".encode(),           # dec d of turning loop
+            self.button_sharp_curve_thres_up: "i".encode(),
+            self.button_sharp_curve_thres_down: "j".encode(),
+            self.button_roundabout_thres_curve_up: "k".encode(),
+            self.button_roundabout_thres_curve_down: "l".encode(),
+            self.button_roundabout_thres_straight_up: "m".encode(),
+            self.button_roundabout_thres_straight_down: "n".encode()
         }
 
         # bytes type: need to be send
@@ -65,7 +73,13 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_turn_p_up: False,
             self.button_turn_p_down: False,
             self.button_turn_d_up: False,
-            self.button_turn_d_down: False
+            self.button_turn_d_down: False,
+            self.button_sharp_curve_thres_up: False,
+            self.button_sharp_curve_thres_down: False,
+            self.button_roundabout_thres_curve_up: False,
+            self.button_roundabout_thres_curve_down: False,
+            self.button_roundabout_thres_straight_up: False,
+            self.button_roundabout_thres_straight_down: False,
         }
 
         self.button_to_edit = {
@@ -76,7 +90,13 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_turn_p_up: self.edit_turn_p,
             self.button_turn_p_down: self.edit_turn_p,
             self.button_turn_d_up: self.edit_turn_d,
-            self.button_turn_d_down: self.edit_turn_d
+            self.button_turn_d_down: self.edit_turn_d,
+            self.button_sharp_curve_thres_up: self.edit_sharp_curve_thres,
+            self.button_sharp_curve_thres_down: self.edit_sharp_curve_thres,
+            self.button_roundabout_thres_curve_up: self.edit_roundabout_thres_curve,
+            self.button_roundabout_thres_curve_down: self.edit_roundabout_thres_curve,
+            self.button_roundabout_thres_straight_up: self.edit_roundabout_thres_straight,
+            self.button_roundabout_thres_straight_down: self.edit_roundabout_thres_straight,
         }
 
     def keyPressEvent(self, e):
@@ -98,7 +118,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def send_command(self, command):
         self.ser.flushInput()
-        self.ser.write(command)
+        for i in range(20):
+            self.ser.write(command)
         time.sleep(0.1)
         for i in range(20):
             self.ser.write("0".encode())
@@ -107,7 +128,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def send_command_and_echo_back(self, key):
         command = self.key_command_dict[key]
         self.ser.flushInput()
-        self.ser.write(command)
+        for i in range(20):
+            self.ser.write(command)
         time.sleep(0.1)
         for i in range(20):
             self.ser.write("0".encode())
@@ -122,7 +144,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 if (len(recvData) == 6):
                     recv = recvData.decode()[:-1]
 
-                    if key in (self.button_thres_up, self.button_thres_down):
+                    int_list = [self.button_thres_up, self.button_thres_down, self.button_sharp_curve_thres_up, self.button_sharp_curve_thres_down, self.button_roundabout_thres_curve_up, self.button_roundabout_thres_curve_down, self.button_roundabout_thres_straight_up, self.button_roundabout_thres_straight_down]
+                    if key in int_list:
                         recv = int(recv)
                     else:
                         recv = int(recv) / 10
@@ -181,6 +204,12 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_turn_p_down.clicked.connect(partial(self.handle_paramerter_key, self.button_turn_p_down))
         self.button_turn_d_up.clicked.connect(partial(self.handle_paramerter_key, self.button_turn_d_up))
         self.button_turn_d_down.clicked.connect(partial(self.handle_paramerter_key, self.button_turn_d_down))
+        self.button_sharp_curve_thres_up.clicked.connect(partial(self.handle_paramerter_key, self.button_sharp_curve_thres_up))
+        self.button_sharp_curve_thres_down.clicked.connect(partial(self.handle_paramerter_key, self.button_sharp_curve_thres_down))
+        self.button_roundabout_thres_curve_up.clicked.connect(partial(self.handle_paramerter_key, self.button_roundabout_thres_curve_up))
+        self.button_roundabout_thres_curve_down.clicked.connect(partial(self.handle_paramerter_key, self.button_roundabout_thres_curve_down))
+        self.button_roundabout_thres_straight_up.clicked.connect(partial(self.handle_paramerter_key, self.button_roundabout_thres_straight_up))
+        self.button_roundabout_thres_straight_down.clicked.connect(partial(self.handle_paramerter_key, self.button_roundabout_thres_straight_down))
 
     def handle_paramerter_key(self, btn):
         if self.serial_status:
@@ -257,9 +286,22 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 string_row_head = color_row + f'<font color="white">0</font>{row}' + "</font>"
             else:
                 string_row_head = color_row + f"{row}" + "</font>"
-            string_row_body = (int(self.dataDict['laneLeft'][row])) * "&nbsp;" + "L"
-            string_row_body += (int(self.dataDict['laneCenter'][row]) - int(self.dataDict['laneLeft'][row])) * "&nbsp;" + "|"
-            string_row_body += (int(self.dataDict['laneRight'][row]) - int(self.dataDict['laneCenter'][row])) * "&nbsp;" + "R<br>"
+
+            if int(self.dataDict['laneLeft'][row]) >= 0:
+                string_row_body = (int(self.dataDict['laneLeft'][row])) * "&nbsp;" + "L"
+            else:
+                string_row_body = ""
+                self.dataDict['laneLeft'][row] = 0
+
+            if int(self.dataDict['laneCenter'][row]) >= 0:
+                string_row_body += (int(self.dataDict['laneCenter'][row]) - int(self.dataDict['laneLeft'][row])) * "&nbsp;" + "|"
+            else:
+                self.dataDict['laneCenter'][row] = 0
+
+            if int(self.dataDict['laneRight'][row]) >= 0:
+                string_row_body += (int(self.dataDict['laneRight'][row]) - int(self.dataDict['laneCenter'][row])) * "&nbsp;" + "R<br>"
+
+
             #print(string_row_body)
             string_list.append(string_row_head + string_row_body)
         self.string_total = "".join(string_list)
@@ -268,7 +310,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def get_frame(self):
         self.ser.flushInput()
-        self.ser.write('1'.encode())
+        for i in range(20):
+            self.ser.write('1'.encode())
         time.sleep(0.1)
         if (self.flag_get_frame_mode != 2):
             #for i in range(20):
@@ -278,11 +321,10 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         failed_times = 0
         while self.working:
-            print("in thread")
             count = self.ser.inWaiting()
 
             if count > 0:
-                #print("count", count)
+                print("data in buffer: ", count)
                 recvData = self.ser.readline()
                 if len(recvData) >= 900:
                     failed_times = 0
@@ -296,6 +338,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                         "detectRight": recv[4][:-1].split(" "),
                         "status": recv[5][:-1].split(" ")
                     }
+                    print(self.dataDict)
 
                     self.get_dataset()
                     current_time = time.strftime("%H:%M:%S", time.localtime())
@@ -349,12 +392,14 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         # the data is ready
         if (self.data_is_ready == 1):
             self.edit_camera.setText(self.string_total)
-            self.edit_error.setText(self.dataDict['status'][0])
-            self.edit_slope.setText(self.dataDict['status'][1])
-            self.edit_sharp_curve_row.setText(self.dataDict['status'][2])
-            self.edit_miss_count.setText(self.dataDict['status'][3])
-            self.edit_roundabout.setText(self.dataDict['status'][4])
-            self.edit_three_way_fork.setText(self.dataDict['status'][5])
+            self.edit_error.setText(str(int(self.dataDict['status'][0])))
+            self.edit_slope.setText(str(int(self.dataDict['status'][1])))
+            self.edit_sharp_curve_row.setText(str(int(self.dataDict['status'][2])))
+            self.edit_miss_count.setText(str(int(self.dataDict['status'][3])))
+            self.edit_roundabout.setText(str(int(self.dataDict['status'][4])))
+            self.edit_three_way_fork.setText(str(int(self.dataDict['status'][5])))
+            self.edit_jitter_left.setText(str(float(self.dataDict['status'][6]) / 100))
+            self.edit_jitter_right.setText(str(float(self.dataDict['status'][7]) / 100))
 
             self.data_is_ready = 0
 
