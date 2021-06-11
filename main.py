@@ -5,7 +5,7 @@ import time
 import socket
 from pathlib import Path
 from functools import partial
-from ui import Ui_MainWindow
+from main_ui import Ui_MainWindow
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow
@@ -232,8 +232,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.edit_jitter_left.setText(str(float(self.dataDict['status'][6]) / 100))
             self.edit_jitter_right.setText(str(float(self.dataDict['status'][7]) / 100))
 
-            current_time = time.strftime("%H:%M:%S", time.localtime())
-            self.label_time.setText(current_time)
+            #current_time = time.strftime("%H:%M:%S", time.localtime())
+            #self.label_time.setText(current_time)
 
             self.button_get_one.setText("Get One Frame")
             self.button_get_one.setEnabled(True)

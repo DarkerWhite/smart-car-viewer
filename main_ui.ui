@@ -256,7 +256,7 @@
       <property name="geometry">
        <rect>
         <x>980</x>
-        <y>650</y>
+        <y>630</y>
         <width>160</width>
         <height>170</height>
        </rect>
@@ -323,20 +323,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_time">
+        <widget class="QPushButton" name="pushButton">
          <property name="font">
           <font>
            <pointsize>11</pointsize>
           </font>
          </property>
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
          <property name="text">
-          <string>Time of Sending</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <string>Remote Camera</string>
          </property>
         </widget>
        </item>
@@ -371,7 +365,7 @@ p, li { white-space: pre-wrap; }
       <property name="geometry">
        <rect>
         <x>980</x>
-        <y>510</y>
+        <y>490</y>
         <width>160</width>
         <height>131</height>
        </rect>
@@ -691,7 +685,7 @@ p, li { white-space: pre-wrap; }
           <enum>QFrame::Box</enum>
          </property>
          <property name="text">
-          <string>turn_p</string>
+          <string>turn_kp</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -744,7 +738,7 @@ p, li { white-space: pre-wrap; }
           <enum>QFrame::Box</enum>
          </property>
          <property name="text">
-          <string>turn_d</string>
+          <string>turn_kd</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
