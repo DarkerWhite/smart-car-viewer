@@ -323,7 +323,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="button_remote_camera">
          <property name="font">
           <font>
            <pointsize>11</pointsize>

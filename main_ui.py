@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui.ui'
+# Form implementation generated from reading ui file '.\main_ui.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -139,7 +139,7 @@ class Ui_MainWindow(object):
         self.edit_jitter_right.setObjectName("edit_jitter_right")
         self.verticalLayout.addWidget(self.edit_jitter_right)
         self.verticalLayoutWidget_3 = QtWidgets.QWidget(self.tab_camera)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(980, 650, 160, 170))
+        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(980, 630, 160, 170))
         self.verticalLayoutWidget_3.setObjectName("verticalLayoutWidget_3")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_3)
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -173,14 +173,12 @@ class Ui_MainWindow(object):
         self.button_get_one.setFont(font)
         self.button_get_one.setObjectName("button_get_one")
         self.verticalLayout_3.addWidget(self.button_get_one)
-        self.label_time = QtWidgets.QLabel(self.verticalLayoutWidget_3)
+        self.button_remote_camera = QtWidgets.QPushButton(self.verticalLayoutWidget_3)
         font = QtGui.QFont()
         font.setPointSize(11)
-        self.label_time.setFont(font)
-        self.label_time.setStyleSheet("")
-        self.label_time.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_time.setObjectName("label_time")
-        self.verticalLayout_3.addWidget(self.label_time)
+        self.button_remote_camera.setFont(font)
+        self.button_remote_camera.setObjectName("button_remote_camera")
+        self.verticalLayout_3.addWidget(self.button_remote_camera)
         self.edit_camera = QtWidgets.QTextEdit(self.tab_camera)
         self.edit_camera.setEnabled(False)
         self.edit_camera.setGeometry(QtCore.QRect(0, 0, 971, 821))
@@ -189,7 +187,7 @@ class Ui_MainWindow(object):
         self.edit_camera.setFont(font)
         self.edit_camera.setObjectName("edit_camera")
         self.gridLayoutWidget = QtWidgets.QWidget(self.tab_camera)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(980, 510, 160, 131))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(980, 490, 160, 131))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -489,10 +487,10 @@ class Ui_MainWindow(object):
         self.label_three_way_fork.setText(_translate("MainWindow", "FlagThreeWayFork:"))
         self.label_jitter_left.setText(_translate("MainWindow", "laneJitterLeft"))
         self.label_jitter_right.setText(_translate("MainWindow", "laneJitterRight"))
-        self.label_ip.setText(_translate("MainWindow", "IP Address:"))
+        self.label_ip.setText(_translate("MainWindow", "IP:Port"))
         self.button_connect.setText(_translate("MainWindow", "Connect"))
         self.button_get_one.setText(_translate("MainWindow", "Get One Frame (Q)"))
-        self.label_time.setText(_translate("MainWindow", "Time of Sending"))
+        self.button_remote_camera.setText(_translate("MainWindow", "Remote Camera"))
         self.edit_camera.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -513,10 +511,10 @@ class Ui_MainWindow(object):
         self.label_lane_distance.setText(_translate("MainWindow", "lane_distance"))
         self.edit_lane_distance.setText(_translate("MainWindow", "1.7"))
         self.button_lane_distance.setText(_translate("MainWindow", "Change"))
-        self.label_turn_p.setText(_translate("MainWindow", "turn_p"))
+        self.label_turn_p.setText(_translate("MainWindow", "turn_kp"))
         self.edit_turn_p.setText(_translate("MainWindow", "0.5"))
         self.button_turn_p.setText(_translate("MainWindow", "Change"))
-        self.label_turn_d.setText(_translate("MainWindow", "turn_d"))
+        self.label_turn_d.setText(_translate("MainWindow", "turn_kd"))
         self.edit_turn_d.setText(_translate("MainWindow", "0.2"))
         self.button_turn_d.setText(_translate("MainWindow", "Change"))
         self.label_sharp_jitter_thres.setText(_translate("MainWindow", "sharpJitThr"))

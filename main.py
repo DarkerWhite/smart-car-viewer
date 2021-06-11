@@ -11,11 +11,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow
 
 from tcpCommon import sendMsg, server_data_is_ready, server_is_working, getTime
+from remote_camera import remoteCamera
 
 class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
         self.setupUi(self)
+        self.ui_remote_camera = remoteCamera()
 
         self.setFixedSize(self.width(), self.height())
 
@@ -114,6 +116,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         pass
 
     def slot_init(self):
+        # main panel button
         self.button_connect.clicked.connect(self.toggle_connection)
         self.edit_ip_address.returnPressed.connect(self.toggle_connection)
 
@@ -121,6 +124,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.timer_key_command.timeout.connect(self.scan_and_send_command)
         self.timer_key_command.start(50)
+
+        self.button_remote_camera.clicked.connect(self.ui_remote_camera.show_remote_camera_window)
 
         # parameter button
         self.button_lane_thres.clicked.connect(partial(self.handle_parameter_key, self.button_lane_thres))
@@ -141,6 +146,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.edit_roundabout_jitter_thres_curve.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_curve))
         self.edit_roundabout_jitter_thres_straight.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_straight))
         self.edit_car_speed.returnPressed.connect(partial(self.handle_parameter_key, self.button_car_speed))
+
 
     def handle_parameter_key(self, btn):
         print(f"pressed {self.parameter_button_command_dict[btn]}")
@@ -199,8 +205,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             if int(self.dataDict['laneRight'][row]) >= 0:
                 string_row_body += (int(self.dataDict['laneRight'][row]) - int(self.dataDict['laneCenter'][row])) * "&nbsp;" + "R<br>"
 
-
             string_list.append(string_row_head + string_row_body)
+
         self.string_total = "".join(string_list)
         self.data_is_ready = 1
 
@@ -268,6 +274,6 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
-    ui = Ui_MainWindow_Son()
-    ui.show()
+    ui_main = Ui_MainWindow_Son()
+    ui_main.show()
     sys.exit(app.exec_())

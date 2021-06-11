@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>RemoteCamera</class>
+ <widget class="QMainWindow" name="RemoteCamera">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -36,12 +36,12 @@
         <x>220</x>
         <y>530</y>
         <width>351</width>
-        <height>28</height>
+        <height>29</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="label_remote_listen_address">
          <property name="font">
           <font>
            <pointsize>11</pointsize>
@@ -53,10 +53,10 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit"/>
+        <widget class="QLineEdit" name="edit_remote_listen_address"/>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="button_remote_listen_address">
          <property name="font">
           <font>
            <pointsize>11</pointsize>
@@ -69,7 +69,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QLabel" name="label_3">
+     <widget class="QLabel" name="label_get_remote">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -105,12 +105,12 @@
         <x>220</x>
         <y>10</y>
         <width>351</width>
-        <height>28</height>
+        <height>29</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="label_remote_send_address">
          <property name="font">
           <font>
            <pointsize>11</pointsize>
@@ -122,10 +122,10 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_2"/>
+        <widget class="QLineEdit" name="edit_remote_send_address"/>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_2">
+        <widget class="QPushButton" name="button_remote_send_address">
          <property name="font">
           <font>
            <pointsize>11</pointsize>
@@ -157,7 +157,7 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2';&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </widget>
