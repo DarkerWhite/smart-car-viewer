@@ -2,6 +2,7 @@ import cv2
 import sys
 import time
 import socket
+import struct
 import numpy as np
 from pathlib import Path
 from remote_ui import Ui_RemoteCamera
@@ -29,6 +30,22 @@ class remoteCamera(QMainWindow, Ui_RemoteCamera):
     def show_remote_camera_window(self):
         self.show()
 
+    def closeEvent(self, event):
+        self.server_is_working = False
+        self.client_is_working = False
+
+        self.button_remote_listen_address.setText("Start Listening")
+        self.button_remote_send_address.setEnabled(True)
+        self.edit_remote_listen_address.setEnabled(True)
+        self.timer_update_camera.stop()
+
+        self.button_remote_send_address.setText("Start Sending")
+        self.button_remote_listen_address.setEnabled(True)
+        self.edit_remote_send_address.setEnabled(True)
+
+        self.server_is_started = False
+        self.client_is_started = False
+
     def init_slot(self):
         self.button_remote_listen_address.clicked.connect(self.toggle_server)
         self.button_remote_send_address.clicked.connect(self.toggle_client)
@@ -45,7 +62,7 @@ class remoteCamera(QMainWindow, Ui_RemoteCamera):
             self.edit_remote_listen_address.setEnabled(False)
 
             self.timer_update_camera.start(100)
-            t_server = Thread(target=self.udp_server)
+            t_server = Thread(target=self.tcp_server)
             t_server.start()
         else:
             self.button_remote_listen_address.setText("Start Listening")
@@ -66,7 +83,7 @@ class remoteCamera(QMainWindow, Ui_RemoteCamera):
             #self.button_remote_listen_address.setEnabled(False)
             self.edit_remote_send_address.setEnabled(False)
 
-            t_client = Thread(target=self.udp_client)
+            t_client = Thread(target=self.tcp_client)
             t_client.start()
         else:
             self.button_remote_send_address.setText("Start Sending")
@@ -83,32 +100,47 @@ class remoteCamera(QMainWindow, Ui_RemoteCamera):
             self.label_get_remote.setPixmap(QtGui.QPixmap.fromImage(showImage))
             self.server_data_is_ready = False
 
-    def udp_server(self):
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_socket.settimeout(1.0)
-        address = self.edit_remote_listen_address.text().split(":")
-        address[1] = int(address[1])
-        address = address[0], address[1]
+    def tcp_server(self):
+        buffer_size = 2048
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as serversocket:
+            serversocket.settimeout(1.0)
 
-        try:
-            server_socket.bind(address)
-        except:
-            return "Error: bind address failed."
+            address = self.edit_remote_listen_address.text().split(":")
+            address[1] = int(address[1])
+            address = address[0], address[1]
 
-        while self.server_is_working:
             try:
-                server_data, address = server_socket.recvfrom(65000)
-            except socket.timeout:
-                continue
-            #print(len(server_data))
-            #print(type(server_data))
-            server_data = np.frombuffer(server_data, dtype=np.uint8)
-            self.server_img_data = cv2.imdecode(server_data, cv2.IMREAD_COLOR)
-            self.server_data_is_ready = True
-            #print(f"server got data, shape: {self.server_img_data.shape}")
-        print("server stopped working")
+                serversocket.bind(address)
+            except:
+                return "Error: bind address failed."
+            serversocket.listen(0)
 
-    def udp_client(self):
+            while self.server_is_working:
+                try:
+                    clientsocket, addr = serversocket.accept()
+                    #print(len(server_data))
+                    #print(type(server_data))
+                except socket.timeout:
+                    continue
+                dataLength = struct.unpack(">I", clientsocket.recv(4))[0]
+                server_data = b""
+                while len(server_data) < dataLength:
+                    data = clientsocket.recv(min(buffer_size, dataLength - len(server_data)))
+                    if not data:
+                        break
+                    server_data += data
+                #print(f"got data, len{len(server_data)}")
+                if len(server_data) > 60000:
+                    server_data = np.frombuffer(server_data, dtype=np.uint8)
+
+                    self.server_img_data = cv2.imdecode(server_data, cv2.IMREAD_COLOR)
+                    self.server_data_is_ready = True
+
+                clientsocket.close()
+                #print(f"server got data, shape: {self.server_img_data.shape}")
+            print("server stopped working")
+
+    def tcp_client(self):
         address = self.edit_remote_send_address.text().split(":")
         address[1] = int(address[1])
         address = address[0], address[1]
@@ -120,11 +152,20 @@ class remoteCamera(QMainWindow, Ui_RemoteCamera):
             return "Error: Failed to open camera."
 
         while self.client_is_working:
-            client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            client_socket.settimeout(3)
-            _, frame = cap.read()
-            frame = cv2.imencode(".jpg", frame)[1]
-            client_socket.sendto(frame, address)
-            #print(f"sending img, len: {len(frame)}")
-            time.sleep(0.1)
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(3)
+                    try:
+                        s.connect(address)
+                    except:
+                        continue
+                    _, frame = cap.read()
+                    frame = cv2.imencode(".jpg", frame)[1]
+
+                    s.sendall(struct.pack(">I", len(frame)))
+                    s.sendall(frame)
+                    #print(f"sending img, len: {len(frame)}")
+                    time.sleep(0.1)
+            except socket.timeout:
+                continue
         print("client stopped working")
