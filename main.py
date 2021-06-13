@@ -11,13 +11,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow
 
 from tcpCommon import sendMsg, server_data_is_ready, server_is_working, getTime
-from remote_camera import remoteCamera
 
 class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
         self.setupUi(self)
-        self.ui_remote_camera = remoteCamera()
 
         self.setFixedSize(self.width(), self.height())
 
@@ -144,7 +142,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.timer_key_command.timeout.connect(self.scan_and_send_command)
         self.timer_key_command.start(50)
 
-        self.button_remote_camera.clicked.connect(self.ui_remote_camera.show_remote_camera_window)
+        self.button_remote_camera.clicked.connect(self.open_remote_camera)
 
         # parameter button
         self.button_lane_thres.clicked.connect(partial(self.handle_parameter_key, self.button_lane_thres))
@@ -166,6 +164,14 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.edit_roundabout_jitter_thres_straight.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_straight))
         self.edit_car_speed.returnPressed.connect(partial(self.handle_parameter_key, self.button_car_speed))
 
+    def open_remote_camera(self):
+        try:
+            from remote_camera import remoteCamera
+            self.ui_remote_camera = remoteCamera()
+            self.ui_remote_camera.show_remote_camera_window()
+        except ImportError:
+            self.edit_camera.append(f"[{getTime()}]: Import error, may due to the lack of cv2 in this python environment.")
+
     def handle_parameter_key(self, btn):
         print(f"pressed {self.parameter_button_command_dict[btn]()}")
         if self.tcp_connection:
@@ -176,7 +182,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             f.write(self.edit_ip_address.text())
 
         if not self.tcp_connection:
-            reply = sendMsg(self.edit_ip_address, "init\n", output_edit=self.edit_camera, output=True, wait_reply=True)
+            reply = sendMsg(self.edit_ip_address, "init\n", output_edit=self.edit_camera, wait_reply=True)
             if reply == "init\n":
                 self.tcp_connection = True
                 self.edit_ip_address.setEnabled(False)
@@ -230,7 +236,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def get_frame(self):
         self.button_get_one.setEnabled(False)
-        self.button_get_one.setText("Getting Frame...") recv = sendMsg(self.edit_ip_address, "com pic", output_edit=self.edit_camera, wait_reply=True)
+        self.button_get_one.setText("Getting Frame...")
+        recv = sendMsg(self.edit_ip_address, "com pic", output_edit=self.edit_camera, wait_reply=True)
         if recv != -1:
             recv = recv[:-1].split(",")
             self.dataDict = {
@@ -281,8 +288,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 recv = sendMsg(self.edit_ip_address,
                         self.parameter_button_command_dict[i](),
                         output_edit=self.edit_camera, wait_reply=False)
-                #if recv != -1:
-                #    self.button_to_edit_dict[i].setText(recv)
+                if recv != -1:
+                    self.button_to_edit_dict[i].setText(recv)
                 self.parameter_button_status_dict[i] = False
 
         if self.flag_get_frame_mode == 1:
