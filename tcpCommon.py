@@ -11,7 +11,7 @@ server_data_is_ready = False
 server_is_working = True
 
 def getTime():
-    return time.strftime("%Y-%m-%d %x")
+    return time.strftime("%H:%M:%S")
 
 def printT(text):
     print(f"[{getTime()}]: {text}")
@@ -27,20 +27,25 @@ def sendMsg(device, msg, output_edit=None, output=True, wait_reply=False):
             device = device[0], int(device[1])
 
             s.connect(device)
+
             try:
                 s.sendall(msg.encode())
+            except:
+                output_edit.append(f"{getTime()}: Timeout while sending.")
+                return -1
+
+            try:
                 if wait_reply:
                     msg = s.recv(1024)
-                    if not msg:
-                        return -1
-                    return msg.decode()
+                    if msg:
+                        return msg.decode()
             except:
                 output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
                 return -1
     except:
         output_edit.append(f"{getTime()}: Failed to establish tcp connection.")
         return -1
-
+    return -1
 
 #def server_side():
 #    global server_data_is_ready

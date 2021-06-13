@@ -44,6 +44,17 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             70: "com clc",          # f - clear flag
         }
 
+        #self.keyboard_command_dict = {
+        #    87: "5",        # w - forward
+        #    65: "3",           # a - left
+        #    83: "6",       # s - backward
+        #    68: "4",          # r - right
+        #    75: "2",           # k - stop
+        #    16777216: "7",     # esc - exit control mode
+        #    80: "8",          # p - pic to pc
+        #    70: "9",          # f - clear flag
+        #}
+
         # bytes type: need to be send
         # function type: [need to be send, key is pressed]
         self.keyboard_status_dict = {
@@ -70,21 +81,21 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.parameter_button_command_dict = {
             # lane thres
-            self.button_lane_thres: "ch laTh",
+            self.button_lane_thres: lambda: f"ch laTh {format(self.edit_lane_thres.text(), '0>3')[:3]}",
             # lane distance
-            self.button_lane_distance: "ch laDs",
+            self.button_lane_distance: lambda: f"ch laDs {format(self.edit_lane_distance.text().replace('.', ''), '0>2')[:2]}",
             # turn - kp
-            self.button_turn_p: "ch tuKp",
+            self.button_turn_p: lambda: f"ch tuKp {format(self.edit_turn_p.text().replace('.', ''), '0>2')[:2]}",
             # turn - kd
-            self.button_turn_d: "ch tuKd",
+            self.button_turn_d: lambda: f"ch tuKd {format(self.edit_turn_d.text().replace('.', ''), '0>2')[:2]}",
             # sharpcurve Jitter Thres
-            self.button_sharp_jitter_thres: "ch sJTh",
+            self.button_sharp_jitter_thres: lambda: f"ch sJTh {format(self.edit_sharpjitter_thres.text(), '0>3')[:3]}",
             # roundabout jitter curve thres
-            self.button_roundabout_jitter_thres_curve: "ch roJC",
+            self.button_roundabout_jitter_thres_curve: lambda: f"ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}",
             # roundabout jitter straight thres
-            self.button_roundabout_jitter_thres_straight: "ch roJS",
+            self.button_roundabout_jitter_thres_straight: lambda: f"ch roJS {format(self.edit_roundabout_jitter_thres_straight.text(), '0>3')[:3]}",
             # car speed
-            self.button_car_speed: "ch carS",
+            self.button_car_speed: lambda: f"ch carS {format(self.edit_car_speed.text(), '0>2')[:2]}",
         }
 
         self.button_to_edit_dict = {
@@ -147,9 +158,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.edit_roundabout_jitter_thres_straight.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_straight))
         self.edit_car_speed.returnPressed.connect(partial(self.handle_parameter_key, self.button_car_speed))
 
-
     def handle_parameter_key(self, btn):
-        print(f"pressed {self.parameter_button_command_dict[btn]}")
+        print(f"pressed {self.parameter_button_command_dict[btn]()}")
         if self.tcp_connection:
             self.parameter_button_status_dict[btn] = True
 
@@ -262,10 +272,10 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         for i in self.parameter_button_status_dict:
             if self.parameter_button_status_dict[i]:
                 recv = sendMsg(self.edit_ip_address,
-                        self.parameter_button_command_dict[i], output=False,
-                        output_edit=self.edit_camera, wait_reply=True)
-                if recv != -1:
-                    self.button_to_edit_dict[i].setText(recv)
+                        self.parameter_button_command_dict[i](), output=True,
+                        output_edit=self.edit_camera, wait_reply=False)
+                #if recv != -1:
+                #    self.button_to_edit_dict[i].setText(recv)
                 self.parameter_button_status_dict[i] = False
 
         if self.flag_get_frame_mode == 1:
