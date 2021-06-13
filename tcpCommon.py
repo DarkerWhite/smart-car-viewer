@@ -16,35 +16,55 @@ def getTime():
 def printT(text):
     print(f"[{getTime()}]: {text}")
 
-def sendMsg(device, msg, output_edit=None, output=True, wait_reply=False):
+# reply msg must end with \n
+def sendMsg(device, msg, output_edit=None, wait_reply=False):
+    time.sleep(0.1)
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(5)
 
-            if output:
-                output_edit.append(f"{getTime()}: Try to make connection to {device.text()}")
+            if output_edit:
+                output_edit.append(f"{getTime()}: Try to send {msg}")
             device = device.text().split(":")
             device = device[0], int(device[1])
 
+            print("making connection")
             s.connect(device)
+            s.setblocking(False)
 
             try:
+                print("sending message")
                 s.sendall(msg.encode())
             except:
-                output_edit.append(f"{getTime()}: Timeout while sending.")
+                print("failed when sending")
+                if output_edit:
+                    output_edit.append(f"{getTime()}: Timeout while sending.")
                 return -1
 
-            try:
-                if wait_reply:
-                    msg = s.recv(1024)
-                    if msg:
-                        return msg.decode()
-            except:
-                output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
-                return -1
+            if wait_reply:
+                msg = ""
+                while True:
+                    try:
+                        msg = s.recv(1024)
+                        if msg:
+                            return msg.decode()
+                    except BlockingIOError:
+                        if msg and msg[-1] == '\n':
+                            return msg
+                        continue
+                    except:
+                        print("failed when waiting for reply")
+                        if output_edit:
+                            output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
+                        return -1
+            else:
+                # return without waiting for reply
+                return 0
     except:
         output_edit.append(f"{getTime()}: Failed to establish tcp connection.")
+        print("connection failed")
         return -1
+    output_edit.append(f"{getTime()}: Unknown error.")
     return -1
 
 #def server_side():
