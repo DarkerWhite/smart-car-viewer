@@ -186,12 +186,12 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             f.write(self.edit_ip_address.text())
 
         if not self.tcp_connection:
-            reply = sendMsg(self.edit_ip_address, "init\n", output_edit=self.edit_camera, wait_reply=True)
-            if reply == "#init\n":
+            reply = sendMsg(self.edit_ip_address, "init\n", output_edit=self.edit_log_control, wait_reply=True)
+            if reply == "init\n":
                 self.tcp_connection = True
                 self.edit_ip_address.setEnabled(False)
                 self.button_connect.setText("Disconnect")
-                self.edit_camera.append(f"{getTime()}: Successfully connected to {self.edit_ip_address.text()}")
+                self.edit_log_control.append(f"{getTime()}: Successfull.")
                 self.button_get_one.setEnabled(True)
         else:
             self.tcp_connection = False
@@ -293,14 +293,14 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         for i in self.keyboard_status_dict:
             if self.keyboard_status_dict[i]:
                 sendMsg(self.edit_ip_address, self.keyboard_command_dict[i],
-                        output_edit=self.edit_camera, wait_reply=False)
+                        output_edit=self.edit_log_control, wait_reply=True)
                 self.keyboard_status_dict[i] = False
 
         for i in self.parameter_button_status_dict:
             if self.parameter_button_status_dict[i]:
                 recv = sendMsg(self.edit_ip_address,
                         self.parameter_button_command_dict[i](),
-                        output_edit=self.edit_camera, wait_reply=False)
+                        output_edit=self.edit_log_parameter, wait_reply=True)
                 if recv == -1:
                     print("change parameter failed")
                     #self.button_to_edit_dict[i].setText(str(recv))

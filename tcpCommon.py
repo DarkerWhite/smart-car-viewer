@@ -1,5 +1,6 @@
 import time
 import json
+import struct
 import socket
 import numpy as np
 
@@ -16,6 +17,17 @@ def getTime():
 def printT(text):
     print(f"[{getTime()}]: {text}")
 
+def recvall(sock, n):
+    # Helper function to recv n bytes or return None if EOF is hit
+    data = b""
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return None
+        data += packet
+    return data
+
+
 # reply msg must end with \n
 def sendMsg(device, msg, output_edit=None, wait_reply=False):
     time.sleep(0.1)
@@ -24,13 +36,18 @@ def sendMsg(device, msg, output_edit=None, wait_reply=False):
             s.settimeout(1)
 
             if output_edit:
-                output_edit.append(f"{getTime()}: Try to send {msg}")
+                output_edit.append(f"{getTime()}: Send {msg[:-1]}")
             device = device.text().split(":")
             device = device[0], int(device[1])
 
             print("making connection")
-            s.connect(device)
-            s.setblocking(False)
+            try:
+                s.connect(device)
+            except:
+                if output_edit:
+                    output_edit.append(f"{getTime()}: Failed to connect.")
+                return -1
+            #s.setblocking(False)
 
             try:
                 print("sending message")
@@ -42,34 +59,37 @@ def sendMsg(device, msg, output_edit=None, wait_reply=False):
                 return -1
 
             if wait_reply:
+                print("waiting for reply")
                 retry_time = 0
-                wait_time = 0
-                recv_msg = b""
+                #wait_time = 0
+                recv_msg = ""
                 while True:
-                    try:
-                        if recv_msg and recv_msg[-1] == '\n':
-                            return recv_msg
-                        recv_buffer = s.recv(100)
-                        if recv_buffer:
-                            recv_msg += recv_buffer.decode()
-                    except BlockingIOError:
-                        if wait_time < 200:
-                            wait_time += 1
-                            time.sleep(0.01)
-                            print("blocking")
-                        else:
-                            if retry_time < 10:
-                                retry_time += 1
-                                print("retrying sending message")
-                                wait_time = 0
-                                time.sleep(0.01)
-                                s.sendall(msg.encode())
-                                recv_msg = ""
-                            else:
-                                print("failed when waiting for reply")
-                                if output_edit:
-                                    output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
+                    msg_length = None
+                    for i in range(200):
+                        print("try to find start signal")
+                        try:
+                            recv = s.recv(1)
+                            if recv == b"#":
+                                msg_length = int(recvall(s, 4).decode())
+                                print(f"got msg length {msg_length}")
+                                break
+                        except ConnectionAbortedError:
+                            if output_edit:
+                                output_edit.append(f"{getTime()}: Connection is aborted.")
                                 return -1
+                        #except socket.timeout:
+                        #    if output_edit:
+                        #        output_edit.append(f"{getTime()}: Timeout when receiving start signal.")
+                        #        return -1
+                    if not msg_length:
+                        if output_edit:
+                            output_edit.append(f"{getTime()}: Failed to find start signal")
+                        return -1
+
+                    try:
+                        recv_msg = recvall(s, msg_length).decode()
+                        output_edit.append(f"{getTime()}: {recv_msg[:-1]}.")
+                        return recv_msg
                     except socket.timeout:
                         if retry_time < 3:
                             retry_time += 1
