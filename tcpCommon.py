@@ -21,7 +21,7 @@ def sendMsg(device, msg, output_edit=None, wait_reply=False):
     time.sleep(0.1)
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(5)
+            s.settimeout(1)
 
             if output_edit:
                 output_edit.append(f"{getTime()}: Try to send {msg}")
@@ -42,28 +42,56 @@ def sendMsg(device, msg, output_edit=None, wait_reply=False):
                 return -1
 
             if wait_reply:
-                msg = ""
+                retry_time = 0
+                wait_time = 0
+                recv_msg = b""
                 while True:
                     try:
-                        msg = s.recv(1024)
-                        if msg:
-                            return msg.decode()
+                        if recv_msg and recv_msg[-1] == '\n':
+                            return recv_msg
+                        recv_buffer = s.recv(100)
+                        if recv_buffer:
+                            recv_msg += recv_buffer.decode()
                     except BlockingIOError:
-                        if msg and msg[-1] == '\n':
-                            return msg
-                        continue
+                        if wait_time < 200:
+                            wait_time += 1
+                            time.sleep(0.01)
+                            print("blocking")
+                        else:
+                            if retry_time < 10:
+                                retry_time += 1
+                                print("retrying sending message")
+                                wait_time = 0
+                                time.sleep(0.01)
+                                s.sendall(msg.encode())
+                                recv_msg = ""
+                            else:
+                                print("failed when waiting for reply")
+                                if output_edit:
+                                    output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
+                                return -1
+                    except socket.timeout:
+                        if retry_time < 3:
+                            retry_time += 1
+                            print("retrying sending message")
+                            s.sendall(msg.encode())
+                            recv_msg = ""
+                        else:
+                            print("failed when waiting for reply")
+                            if output_edit:
+                                output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
+                            return -1
                     except:
-                        print("failed when waiting for reply")
-                        if output_edit:
-                            output_edit.append(f"{getTime()}: Timeout while waiting for reply.")
-                        return -1
+                        raise
+            # return without waiting for reply
             else:
-                # return without waiting for reply
                 return 0
-    except:
+    except socket.timeout:
         output_edit.append(f"{getTime()}: Failed to establish tcp connection.")
         print("connection failed")
         return -1
+    except:
+        raise
     output_edit.append(f"{getTime()}: Unknown error.")
     return -1
 

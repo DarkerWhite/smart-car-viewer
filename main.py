@@ -31,27 +31,27 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.data_is_ready = 0
         self.need_clean = 0
 
+        #self.keyboard_command_dict = {
+        #    87: "com for\n",        # w - forward
+        #    65: "com lft\n",           # a - left
+        #    83: "com bak\n",       # s - backward
+        #    68: "com rgt\n",          # r - right
+        #    75: "com stp\n",           # k - stop
+        #    16777216: "com ext\n",     # esc - exit control mode
+        #    80: "com top\n",          # p - pic to pc
+        #    70: "com clc\n",          # f - clear flag
+        #}
+
         self.keyboard_command_dict = {
-            87: "com for\n",        # w - forward
+            87: "car_go\n",        # w - forward
             65: "com lft\n",           # a - left
             83: "com bak\n",       # s - backward
             68: "com rgt\n",          # r - right
-            75: "com stp\n",           # k - stop
+            75: "car_stop\n",           # k - stop
             16777216: "com ext\n",     # esc - exit control mode
             80: "com top\n",          # p - pic to pc
             70: "com clc\n",          # f - clear flag
         }
-
-        #self.keyboard_command_dict = {
-        #    87: "5",        # w - forward
-        #    65: "3",           # a - left
-        #    83: "6",       # s - backward
-        #    68: "4",          # r - right
-        #    75: "2",           # k - stop
-        #    16777216: "7",     # esc - exit control mode
-        #    80: "8",          # p - pic to pc
-        #    70: "9",          # f - clear flag
-        #}
 
         # bytes type: need to be send
         # function type: [need to be send, key is pressed]
@@ -81,22 +81,22 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.parameter_button_command_dict = {
             # lane thres
             # uint16 pixelMeanThres
-            self.button_lane_thres: lambda: f"ch laTh {format(self.edit_lane_thres.text(), '0>3')[:3]}\n",
+            self.button_lane_thres: lambda: f"laTh:{int(self.edit_lane_thres.text())}\n",
             # lane distance
             # float detectDistance
-            self.button_lane_distance: lambda: f"ch laDs {format(self.edit_lane_distance.text().replace('.', ''), '0>2')[:2]}\n",
+            self.button_lane_distance: lambda: f"laDs:{format(self.edit_lane_distance.text().replace('.', ''), '0>2')[:2]}\n",
             # sharpcurve Jitter Thres
             # int16 sharpCurveJitterThres
             self.button_sharp_jitter_thres: lambda: f"ch sJTh {format(self.edit_sharpjitter_thres.text(), '0>3')[:3]}\n",
             # car speed
             # int16 basic_speed
-            self.button_car_speed: lambda: f"ch carS {format(self.edit_car_speed.text(), '0>2')[:2]}\n",
+            self.button_car_speed: lambda: f"Car_Speed:{int(self.edit_car_speed.text())}\n",
 
             # turn - kp
             # float kp
-            self.button_turn_p: lambda: f"ch tuKp {format(self.edit_turn_p.text().replace('.', ''), '0>2')[:2]}\n",
+            self.button_turn_p: lambda: f"Turn_Kp:{str(int(float(self.edit_turn_p.text())*1000)).replace('.', '')}\n",
             # turn - kd
-            self.button_turn_d: lambda: f"ch tuKd {format(self.edit_turn_d.text().replace('.', ''), '0>2')[:2]}\n",
+            self.button_turn_d: lambda: f"Turn_Kd:{str(int(float(self.edit_turn_d.text())*1000)).replace('.', '')}\n",
 
             # roundabout jitter curve thres
             self.button_roundabout_jitter_thres_curve: lambda: f"ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}\n",
@@ -114,6 +114,10 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_roundabout_jitter_thres_straight: self.edit_roundabout_jitter_thres_straight,
             self.button_car_speed: self.edit_car_speed
         }
+
+        self.button_sharp_jitter_thres.setEnabled(False)
+        self.button_roundabout_jitter_thres_curve.setEnabled(False)
+        self.button_roundabout_jitter_thres_straight.setEnabled(False)
 
     def remember_port(self):
         config_file = Path("config.ini")
@@ -183,7 +187,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if not self.tcp_connection:
             reply = sendMsg(self.edit_ip_address, "init\n", output_edit=self.edit_camera, wait_reply=True)
-            if reply == "init\n":
+            if reply == "#init\n":
                 self.tcp_connection = True
                 self.edit_ip_address.setEnabled(False)
                 self.button_connect.setText("Disconnect")
@@ -237,17 +241,26 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def get_frame(self):
         self.button_get_one.setEnabled(False)
         self.button_get_one.setText("Getting Frame...")
-        recv = sendMsg(self.edit_ip_address, "com pic", output_edit=self.edit_camera, wait_reply=True)
+        recv = sendMsg(self.edit_ip_address, "ShowCamera\n", output_edit=self.edit_camera, wait_reply=True)
         if recv != -1:
+            print(recv)
             recv = recv[:-1].split(",")
-            self.dataDict = {
-                "laneLeft": recv[0][:-1].split(" "),
-                "laneRight": recv[1][:-1].split(" "),
-                "laneCenter": recv[2][:-1].split(" "),
-                "detectLeft": recv[3][:-1].split(" "),
-                "detectRight": recv[4][:-1].split(" "),
-                "status": recv[5][:-1].split(" ")
-            }
+            try:
+                self.dataDict = {
+                    "laneLeft": recv[0][:-1].split(" "),
+                    "laneRight": recv[1][:-1].split(" "),
+                    "laneCenter": recv[2][:-1].split(" "),
+                    "detectLeft": recv[3][:-1].split(" "),
+                    "detectRight": recv[4][:-1].split(" "),
+                    "status": recv[5][:-1].split(" ")
+                }
+            except IndexError:
+                self.edit_camera.setText(f"{getTime()}: Get camera frame failed, index error.")
+                self.button_get_one.setText("Get One Frame")
+                self.button_get_one.setEnabled(True)
+
+                self.flag_get_frame_mode = 0
+                return -1
             print(self.dataDict)
 
             self.decode_dataset()
@@ -288,8 +301,9 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 recv = sendMsg(self.edit_ip_address,
                         self.parameter_button_command_dict[i](),
                         output_edit=self.edit_camera, wait_reply=False)
-                if recv != -1:
-                    self.button_to_edit_dict[i].setText(recv)
+                if recv == -1:
+                    print("change parameter failed")
+                    #self.button_to_edit_dict[i].setText(str(recv))
                 self.parameter_button_status_dict[i] = False
 
         if self.flag_get_frame_mode == 1:
