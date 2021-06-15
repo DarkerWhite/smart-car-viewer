@@ -22,6 +22,7 @@ def recvall(sock, n):
     data = b""
     while len(data) < n:
         packet = sock.recv(n - len(data))
+        print("packet", packet)
         if not packet:
             return None
         data += packet
@@ -65,10 +66,11 @@ def sendMsg(device, msg, output_edit=None, wait_reply=False):
                 recv_msg = ""
                 while True:
                     msg_length = None
-                    for i in range(200):
+                    for i in range(20):
                         print("try to find start signal")
                         try:
                             recv = s.recv(1)
+                            print("start", recv)
                             if recv == b"#":
                                 msg_length = int(recvall(s, 4).decode())
                                 print(f"got msg length {msg_length}")
@@ -91,7 +93,7 @@ def sendMsg(device, msg, output_edit=None, wait_reply=False):
                         output_edit.append(f"{getTime()}: {recv_msg[:-1]}.")
                         return recv_msg
                     except socket.timeout:
-                        if retry_time < 3:
+                        if retry_time < 5:
                             retry_time += 1
                             print("retrying sending message")
                             s.sendall(msg.encode())

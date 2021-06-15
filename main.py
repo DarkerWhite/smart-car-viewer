@@ -43,14 +43,15 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         #}
 
         self.keyboard_command_dict = {
-            87: "car_go\n",        # w - forward
-            65: "com lft\n",           # a - left
-            83: "com bak\n",       # s - backward
-            68: "com rgt\n",          # r - right
-            75: "car_stop\n",           # k - stop
-            16777216: "com ext\n",     # esc - exit control mode
-            80: "com top\n",          # p - pic to pc
-            70: "com clc\n",          # f - clear flag
+            #87: "car_go\n",        # w - forward
+            87: "Forward\n",        # w - forward
+            65: "Left\n",           # a - left
+            83: "Backward\n",       # s - backward
+            68: "Right\n",          # r - right
+            75: "car_go\n",           # k - start
+            16777216: "car_stop\n",     # esc - exit control mode
+            80: "Dog\n",          # p - release dog!
+            70: "ClearElement\n",          # f - clear flag
         }
 
         # bytes type: need to be send
@@ -108,7 +109,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_lane_thres: self.edit_lane_thres,
             self.button_lane_distance: self.edit_lane_distance,
             self.button_turn_p: self.edit_turn_p,
-            self.button_turn_d: self.edit_turn_p,
+            self.button_turn_d: self.edit_turn_d,
             self.button_sharp_jitter_thres: self.edit_sharpjitter_thres,
             self.button_roundabout_jitter_thres_curve: self.edit_roundabout_jitter_thres_curve,
             self.button_roundabout_jitter_thres_straight: self.edit_roundabout_jitter_thres_straight,
@@ -162,7 +163,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.edit_lane_thres.returnPressed.connect(partial(self.handle_parameter_key, self.button_lane_thres))
         self.edit_lane_distance.returnPressed.connect(partial(self.handle_parameter_key, self.button_lane_distance))
         self.edit_turn_p.returnPressed.connect(partial(self.handle_parameter_key, self.button_turn_p))
-        self.edit_turn_p.returnPressed.connect(partial(self.handle_parameter_key, self.button_turn_d))
+        self.edit_turn_d.returnPressed.connect(partial(self.handle_parameter_key, self.button_turn_d))
         self.edit_sharpjitter_thres.returnPressed.connect(partial(self.handle_parameter_key, self.button_sharp_jitter_thres))
         self.edit_roundabout_jitter_thres_curve.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_curve))
         self.edit_roundabout_jitter_thres_straight.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_straight))
