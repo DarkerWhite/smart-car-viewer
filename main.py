@@ -3,6 +3,7 @@
 import sys
 import time
 import socket
+import configparser
 from pathlib import Path
 from functools import partial
 from main_ui import Ui_MainWindow
@@ -16,13 +17,14 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent=parent)
         self.setupUi(self)
-
         self.setFixedSize(self.width(), self.height())
 
         self.timer_key_command = QtCore.QTimer()
 
         self.slot_init()
-        self.remember_port()
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        self.get_config_history()
 
         self.tcp_connection = False
 
@@ -30,17 +32,6 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.getting_pic = False
         self.data_is_ready = 0
         self.need_clean = 0
-
-        #self.keyboard_command_dict = {
-        #    87: "com for\n",        # w - forward
-        #    65: "com lft\n",           # a - left
-        #    83: "com bak\n",       # s - backward
-        #    68: "com rgt\n",          # r - right
-        #    75: "com stp\n",           # k - stop
-        #    16777216: "com ext\n",     # esc - exit control mode
-        #    80: "com top\n",          # p - pic to pc
-        #    70: "com clc\n",          # f - clear flag
-        #}
 
         self.keyboard_command_dict = {
             #87: "car_go\n",        # w - forward
@@ -75,9 +66,11 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_sharp_jitter_thres: False,
             self.button_roundabout_jitter_thres_curve: False,
             self.button_roundabout_jitter_thres_straight: False,
-            self.button_car_speed: False
+            self.button_car_speed: False,
+            self.button_speed_p: False,
+            self.button_speed_i: False,
+            self.button_speed_d: False
         }
-
 
         self.parameter_button_command_dict = {
             # lane thres
@@ -103,6 +96,10 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_roundabout_jitter_thres_curve: lambda: f"ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}\n",
             # roundabout jitter straight thres
             self.button_roundabout_jitter_thres_straight: lambda: f"ch roJS {format(self.edit_roundabout_jitter_thres_straight.text(), '0>3')[:3]}\n",
+
+            self.button_speed_p: lambda: f"ch spdP {self.edit_speed_p.text()}",
+            self.button_speed_i: lambda: f"ch spdI {self.edit_speed_i.text()}",
+            self.button_speed_d: lambda: f"ch spdD {self.edit_speed_d.text()}",
         }
 
         self.button_to_edit_dict = {
@@ -120,12 +117,31 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_roundabout_jitter_thres_curve.setEnabled(False)
         self.button_roundabout_jitter_thres_straight.setEnabled(False)
 
+    def get_config_history(self):
+        self.edit_ip_address_control.setText(self.config['ip']['control_core'])
+        self.edit_ip_address_camera.setText(self.config['ip']['camera_core'])
+
+        self.edit_lane_thres.setText(self.config['parameter_camera']['lane_thres'])
+        self.edit_lane_distance.setText(self.config['parameter_camera']['lane_distance'])
+        self.edit_sharpjitter_thres.setText(self.config['parameter_camera']['sharpJitThr'])
+        self.edit_roundabout_jitter_thres_curve.setText(self.config['parameter_camera']['rouJitThrCur'])
+        self.edit_roundabout_jitter_thres_straight.setText(self.config['parameter_camera']['rouJitThrStr'])
+
+        self.edit_turn_p.setText(self.config['parameter_turning_loop']['turn_kp'])
+        self.edit_turn_d.setText(self.config['parameter_turning_loop']['turn_kd'])
+
+        self.edit_speed_p.setText(self.config['parameter_speed_loop']['speed_kp'])
+        self.edit_speed_i.setText(self.config['parameter_speed_loop']['speed_ki'])
+        self.edit_speed_d.setText(self.config['parameter_speed_loop']['speed_kd'])
+
+        self.edit_car_speed.setText(self.config['parameter_control']['car_speed'])
+
     def remember_port(self):
         config_file = Path("config.ini")
         if config_file.is_file():
             with open(config_file, "r") as f:
                 ip_port = f.read()
-            self.edit_ip_address.setText(ip_port)
+            self.edit_ip_address_control.setText(ip_port)
 
     def keyPressEvent(self, e):
         if self.tcp_connection:
@@ -140,7 +156,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def slot_init(self):
         # main panel button
         self.button_connect.clicked.connect(self.toggle_connection)
-        self.edit_ip_address.returnPressed.connect(self.toggle_connection)
+        self.edit_ip_address_control.returnPressed.connect(self.toggle_connection)
 
         self.button_get_one.clicked.connect(self.get_one_frame)
 
@@ -183,20 +199,19 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.parameter_button_status_dict[btn] = True
 
     def toggle_connection(self):
-        with open("config.ini", "w") as f:
-            f.write(self.edit_ip_address.text())
-
         if not self.tcp_connection:
-            reply = sendMsg(self.edit_ip_address, "init\n", output_edit=self.edit_log_control, wait_reply=True)
-            if reply == "init\n":
+            reply_control = sendMsg(self.edit_ip_address_control, "init\n", output_edit=self.edit_log_control, wait_reply=True)
+            reply_camera = sendMsg(self.edit_ip_address_camera, "init\n", output_edit=self.edit_log_control, wait_reply=True)
+
+            if reply_control == "init\n" and reply_camera == "init\n":
                 self.tcp_connection = True
-                self.edit_ip_address.setEnabled(False)
+                self.edit_ip_address_control.setEnabled(False)
                 self.button_connect.setText("Disconnect")
                 self.edit_log_control.append(f"{getTime()}: Successfull.")
                 self.button_get_one.setEnabled(True)
         else:
             self.tcp_connection = False
-            self.edit_ip_address.setEnabled(True)
+            self.edit_ip_address_control.setEnabled(True)
             self.button_get_one.setEnabled(False)
             self.button_connect.setText("Connect")
 
@@ -242,7 +257,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def get_frame(self):
         self.button_get_one.setEnabled(False)
         self.button_get_one.setText("Getting Frame...")
-        recv = sendMsg(self.edit_ip_address, "ShowCamera\n", output_edit=self.edit_camera, wait_reply=True)
+        recv = sendMsg(self.edit_ip_address_control, "ShowCamera\n", output_edit=self.edit_camera, wait_reply=True)
         if recv != -1:
             print(recv)
             recv = recv[:-1].split(",")
@@ -293,13 +308,13 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def scan_and_send_command(self):
         for i in self.keyboard_status_dict:
             if self.keyboard_status_dict[i]:
-                sendMsg(self.edit_ip_address, self.keyboard_command_dict[i],
+                sendMsg(self.edit_ip_address_control, self.keyboard_command_dict[i],
                         output_edit=self.edit_log_control, wait_reply=True)
                 self.keyboard_status_dict[i] = False
 
         for i in self.parameter_button_status_dict:
             if self.parameter_button_status_dict[i]:
-                recv = sendMsg(self.edit_ip_address,
+                recv = sendMsg(self.edit_ip_address_control,
                         self.parameter_button_command_dict[i](),
                         output_edit=self.edit_log_parameter, wait_reply=True)
                 if recv == -1:
@@ -310,6 +325,29 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.flag_get_frame_mode == 1:
             self.get_frame()
             self.flag_get_frame_mode = 0
+
+    def closeEvent(self, *args, **kwargs):
+        super(QtWidgets.QMainWindow, self).closeEvent(*args, **kwargs)
+        self.config['ip']['control_core'] = self.edit_ip_address_control.text()
+        self.config['ip']['camera_core'] = self.edit_ip_address_camera.text()
+
+        self.config['parameter_camera']['lane_thres'] = self.edit_lane_thres.text()
+        self.config['parameter_camera']['lane_distance'] = self.edit_lane_distance.text()
+        self.config['parameter_camera']['sharpJitThr'] = self.edit_sharpjitter_thres.text()
+        self.config['parameter_camera']['rouJitThrCur'] = self.edit_roundabout_jitter_thres_curve.text()
+        self.config['parameter_camera']['rouJitThrStr'] = self.edit_roundabout_jitter_thres_straight.text()
+
+        self.config['parameter_turning_loop']['turn_kp'] = self.edit_turn_p.text()
+        self.config['parameter_turning_loop']['turn_kd'] = self.edit_turn_d.text()
+
+        self.config['parameter_speed_loop']['speed_kp'] = self.edit_speed_p.text()
+        self.config['parameter_speed_loop']['speed_ki'] = self.edit_speed_i.text()
+        self.config['parameter_speed_loop']['speed_kd'] = self.edit_speed_d.text()
+
+        self.config['parameter_control']['car_speed'] = self.edit_car_speed.text()
+
+        with open("config.ini", "w") as f:
+            self.config.write(f)
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
