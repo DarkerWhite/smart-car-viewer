@@ -10,6 +10,7 @@ from main_ui import Ui_MainWindow
 from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtCore import Qt
 
 from tcpCommon import sendMsg, server_data_is_ready, server_is_working, getTime
 
@@ -26,7 +27,8 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.config.read("config.ini")
         self.get_config_history()
 
-        self.tcp_connection = False
+        self.tcp_connection_control = False
+        self.tcp_connection_camera = False
 
         self.flag_get_frame_mode = 0
         self.getting_pic = False
@@ -34,28 +36,29 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.need_clean = 0
 
         self.keyboard_command_dict = {
-            #87: "car_go\n",        # w - forward
-            87: "Forward\n",        # w - forward
-            65: "Left\n",           # a - left
-            83: "Backward\n",       # s - backward
-            68: "Right\n",          # r - right
-            75: "car_go\n",           # k - start
-            16777216: "car_stop\n",     # esc - exit control mode
-            80: "Dog\n",          # p - release dog!
-            70: "ClearElement\n",          # f - clear flag
+            Qt.Key_W: "CON@Forward\n",        # w - forward
+            Qt.Key_A: "CON@Left\n",           # a - left
+            Qt.Key_S: "CON@Backward\n",       # s - backward
+            Qt.Key_D: "CON@Right\n",          # r - right
+            Qt.Key_K: "CON@car_go\n",           # k - start
+            Qt.Key_Escape: "CON@car_stop\n",     # esc - exit control mode
+            Qt.Key_G: "CAM@Dog\n",          # g - release dog to bite camera!
+            Qt.Key_T: "CON@Dog\n",          # t - release dog to bite control!
+            Qt.Key_F: "CAM@ClearElement\n",          # f - clear flag
         }
 
         # bytes type: need to be send
         # function type: [need to be send, key is pressed]
         self.keyboard_status_dict = {
-            87: False,
-            65: False,
-            83: False,
-            68: False,
-            75: False,
-            16777216: False,
-            80: False,
-            70: False
+            Qt.Key_W: False,
+            Qt.Key_A: False,
+            Qt.Key_S: False,
+            Qt.Key_D: False,
+            Qt.Key_K: False,
+            Qt.Key_Escape: False,
+            Qt.Key_G: False,
+            Qt.Key_T: False,
+            Qt.Key_F: False
         }
 
         self.parameter_button_status_dict = {
@@ -75,31 +78,31 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.parameter_button_command_dict = {
             # lane thres
             # uint16 pixelMeanThres
-            self.button_lane_thres: lambda: f"laTh:{int(self.edit_lane_thres.text())}\n",
+            self.button_lane_thres: lambda: f"CAM@laTh:{int(self.edit_lane_thres.text())}\n",
             # lane distance
             # float detectDistance
-            self.button_lane_distance: lambda: f"laDs:{format(self.edit_lane_distance.text().replace('.', ''), '0>2')[:2]}\n",
+            self.button_lane_distance: lambda: f"CAM@laDs:{format(self.edit_lane_distance.text().replace('.', ''), '0>2')[:2]}\n",
             # sharpcurve Jitter Thres
             # int16 sharpCurveJitterThres
-            self.button_sharp_jitter_thres: lambda: f"ch sJTh {format(self.edit_sharpjitter_thres.text(), '0>3')[:3]}\n",
+            self.button_sharp_jitter_thres: lambda: f"CAM@ch sJTh {format(self.edit_sharpjitter_thres.text(), '0>3')[:3]}\n",
             # car speed
             # int16 basic_speed
-            self.button_car_speed: lambda: f"Car_Speed:{int(self.edit_car_speed.text())}\n",
+            self.button_car_speed: lambda: f"CAM@Car_Speed:{int(self.edit_car_speed.text())}\n",
 
             # turn - kp
             # float kp
-            self.button_turn_p: lambda: f"Turn_Kp:{str(int(float(self.edit_turn_p.text())*1000)).replace('.', '')}\n",
+            self.button_turn_p: lambda: f"CAM@Turn_Kp:{str(int(float(self.edit_turn_p.text())*1000)).replace('.', '')}\n",
             # turn - kd
-            self.button_turn_d: lambda: f"Turn_Kd:{str(int(float(self.edit_turn_d.text())*1000)).replace('.', '')}\n",
+            self.button_turn_d: lambda: f"CAM@Turn_Kd:{str(int(float(self.edit_turn_d.text())*1000)).replace('.', '')}\n",
 
             # roundabout jitter curve thres
-            self.button_roundabout_jitter_thres_curve: lambda: f"ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}\n",
+            self.button_roundabout_jitter_thres_curve: lambda: f"CAM@ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}\n",
             # roundabout jitter straight thres
             self.button_roundabout_jitter_thres_straight: lambda: f"ch roJS {format(self.edit_roundabout_jitter_thres_straight.text(), '0>3')[:3]}\n",
 
-            self.button_speed_p: lambda: f"ch spdP {self.edit_speed_p.text()}",
-            self.button_speed_i: lambda: f"ch spdI {self.edit_speed_i.text()}",
-            self.button_speed_d: lambda: f"ch spdD {self.edit_speed_d.text()}",
+            self.button_speed_p: lambda: f"CAM@ch spdP {self.edit_speed_p.text()}",
+            self.button_speed_i: lambda: f"CAM@ch spdI {self.edit_speed_i.text()}",
+            self.button_speed_d: lambda: f"CAM@ch spdD {self.edit_speed_d.text()}",
         }
 
         self.button_to_edit_dict = {
@@ -136,27 +139,21 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.edit_car_speed.setText(self.config['parameter_control']['car_speed'])
 
-    def remember_port(self):
-        config_file = Path("config.ini")
-        if config_file.is_file():
-            with open(config_file, "r") as f:
-                ip_port = f.read()
-            self.edit_ip_address_control.setText(ip_port)
-
     def keyPressEvent(self, e):
-        if self.tcp_connection:
-            if e.key() in self.keyboard_command_dict:
-                self.keyboard_status_dict[e.key()] = True
-            if e.key() == 81:
-                self.flag_get_frame_mode = 1
+        if e.key() in self.keyboard_command_dict:
+            self.keyboard_status_dict[e.key()] = True
+        if e.key() == 81:
+            self.flag_get_frame_mode = 1
 
     def keyReleaseEvent(self, e):
         pass
 
     def slot_init(self):
         # main panel button
-        self.button_connect.clicked.connect(self.toggle_connection)
-        self.edit_ip_address_control.returnPressed.connect(self.toggle_connection)
+        self.button_connect_control.clicked.connect(self.toggle_connection_control)
+        self.button_connect_camera.clicked.connect(self.toggle_connection_camera)
+        self.edit_ip_address_control.returnPressed.connect(self.toggle_connection_control)
+        self.edit_ip_address_camera.returnPressed.connect(self.toggle_connection_camera)
 
         self.button_get_one.clicked.connect(self.get_one_frame)
 
@@ -195,25 +192,49 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def handle_parameter_key(self, btn):
         print(f"pressed {self.parameter_button_command_dict[btn]()}")
-        if self.tcp_connection:
-            self.parameter_button_status_dict[btn] = True
+        self.parameter_button_status_dict[btn] = True
 
-    def toggle_connection(self):
-        if not self.tcp_connection:
-            reply_control = sendMsg(self.edit_ip_address_control, "init\n", output_edit=self.edit_log_control, wait_reply=True)
-            reply_camera = sendMsg(self.edit_ip_address_camera, "init\n", output_edit=self.edit_log_control, wait_reply=True)
+    def toggle_connection_control(self):
+        if not self.tcp_connection_control:
+            reply_control = sendMsg(
+                (self.edit_ip_address_control, self.edit_ip_address_camera),
+                (self.tcp_connection_control, self.tcp_connection_camera),
+                "CON@init\n",
+                output_edit=self.edit_log_control,
+                wait_reply=True
+            )
 
-            if reply_control == "init\n" and reply_camera == "init\n":
-                self.tcp_connection = True
+            if reply_control == "control\n":
+                self.tcp_connection_control = True
                 self.edit_ip_address_control.setEnabled(False)
-                self.button_connect.setText("Disconnect")
+                self.button_connect_control.setText("Disconnect")
+                self.edit_log_control.append(f"{getTime()}: Successfull.")
+        else:
+            self.tcp_connection_control = False
+            self.edit_ip_address_control.setEnabled(True)
+            self.button_connect_control.setText("Connect")
+
+    def toggle_connection_camera(self):
+        if not self.tcp_connection_camera:
+            reply_camera = sendMsg(
+                (self.edit_ip_address_control, self.edit_ip_address_camera),
+                (self.tcp_connection_control, self.tcp_connection_camera),
+                "CAM@init\n",
+                output_edit=self.edit_log_control,
+                wait_reply=True
+            )
+
+            if reply_camera == "camera\n":
+                self.tcp_connection_camera = True
+                self.edit_ip_address_camera.setEnabled(False)
+                self.button_connect_camera.setText("Disconnect")
                 self.edit_log_control.append(f"{getTime()}: Successfull.")
                 self.button_get_one.setEnabled(True)
         else:
-            self.tcp_connection = False
-            self.edit_ip_address_control.setEnabled(True)
+            self.tcp_connection_camera = False
+            self.edit_ip_address_camera.setEnabled(True)
             self.button_get_one.setEnabled(False)
-            self.button_connect.setText("Connect")
+            self.button_connect_camera.setText("Connect")
 
     def get_one_frame(self):
         self.flag_get_frame_mode = 1
@@ -257,7 +278,13 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def get_frame(self):
         self.button_get_one.setEnabled(False)
         self.button_get_one.setText("Getting Frame...")
-        recv = sendMsg(self.edit_ip_address_control, "ShowCamera\n", output_edit=self.edit_camera, wait_reply=True)
+        recv = sendMsg(
+            (self.edit_ip_address_control, self.edit_ip_address_camera),
+            (self.tcp_connection_control, self.tcp_connection_camera),
+            "ShowCamera\n",
+            output_edit=self.edit_camera,
+            wait_reply=True
+        )
         if recv != -1:
             print(recv)
             recv = recv[:-1].split(",")
@@ -308,15 +335,24 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
     def scan_and_send_command(self):
         for i in self.keyboard_status_dict:
             if self.keyboard_status_dict[i]:
-                sendMsg(self.edit_ip_address_control, self.keyboard_command_dict[i],
-                        output_edit=self.edit_log_control, wait_reply=True)
+                sendMsg(
+                    (self.edit_ip_address_control, self.edit_ip_address_camera),
+                    (self.tcp_connection_control, self.tcp_connection_camera),
+                    self.keyboard_command_dict[i],
+                    output_edit=self.edit_log_control,
+                    wait_reply=True
+                )
                 self.keyboard_status_dict[i] = False
 
         for i in self.parameter_button_status_dict:
             if self.parameter_button_status_dict[i]:
-                recv = sendMsg(self.edit_ip_address_control,
-                        self.parameter_button_command_dict[i](),
-                        output_edit=self.edit_log_parameter, wait_reply=True)
+                recv = sendMsg(
+                    (self.edit_ip_address_control, self.edit_ip_address_camera),
+                    (self.tcp_connection_control, self.tcp_connection_camera),
+                    self.parameter_button_command_dict[i](),
+                    output_edit=self.edit_log_control,
+                    wait_reply=True
+                )
                 if recv == -1:
                     print("change parameter failed")
                     #self.button_to_edit_dict[i].setText(str(recv))

@@ -11,6 +11,13 @@ device = {
 server_data_is_ready = False
 server_is_working = True
 
+destination_to_index = {
+    "CON": 0,
+    "CAM": 1
+}
+
+
+
 def getTime():
     return time.strftime("%H:%M:%S")
 
@@ -30,8 +37,12 @@ def recvall(sock, n):
 
 
 # reply msg must end with \n
-def sendMsg(device, msg, output_edit=None, wait_reply=False):
-    time.sleep(0.1)
+def sendMsg(device, status, msg, output_edit=None, wait_reply=False):
+    msg = msg.split("@")
+    status = status[destination_to_index[msg[0]]]
+    device = device[destination_to_index[msg[0]]]
+    msg = msg[1]
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(1)
