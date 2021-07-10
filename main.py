@@ -350,7 +350,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                     (self.edit_ip_address_control, self.edit_ip_address_camera),
                     (self.tcp_connection_control, self.tcp_connection_camera),
                     self.parameter_button_command_dict[i](),
-                    output_edit=self.edit_log_control,
+                    output_edit=self.edit_log_parameter,
                     wait_reply=True
                 )
                 if recv == -1:
