@@ -87,22 +87,22 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_sharp_jitter_thres: lambda: f"CAM@ch sJTh {format(self.edit_sharpjitter_thres.text(), '0>3')[:3]}\n",
             # car speed
             # int16 basic_speed
-            self.button_car_speed: lambda: f"CAM@Car_Speed:{int(self.edit_car_speed.text())}\n",
+            self.button_car_speed: lambda: f"CON@Car_Speed:{int(self.edit_car_speed.text())}\n",
 
             # turn - kp
             # float kp
-            self.button_turn_p: lambda: f"CAM@Turn_Kp:{str(int(float(self.edit_turn_p.text())*1000)).replace('.', '')}\n",
+            self.button_turn_p: lambda: f"CON@Turn_Kp:{str(int(float(self.edit_turn_p.text())*1000)).replace('.', '')}\n",
             # turn - kd
-            self.button_turn_d: lambda: f"CAM@Turn_Kd:{str(int(float(self.edit_turn_d.text())*1000)).replace('.', '')}\n",
+            self.button_turn_d: lambda: f"CON@Turn_Kd:{str(int(float(self.edit_turn_d.text())*1000)).replace('.', '')}\n",
 
             # roundabout jitter curve thres
             self.button_roundabout_jitter_thres_curve: lambda: f"CAM@ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}\n",
             # roundabout jitter straight thres
-            self.button_roundabout_jitter_thres_straight: lambda: f"ch roJS {format(self.edit_roundabout_jitter_thres_straight.text(), '0>3')[:3]}\n",
+            self.button_roundabout_jitter_thres_straight: lambda: f"CAM@ch roJS {format(self.edit_roundabout_jitter_thres_straight.text(), '0>3')[:3]}\n",
 
-            self.button_speed_p: lambda: f"CAM@ch spdP {self.edit_speed_p.text()}",
-            self.button_speed_i: lambda: f"CAM@ch spdI {self.edit_speed_i.text()}",
-            self.button_speed_d: lambda: f"CAM@ch spdD {self.edit_speed_d.text()}",
+            self.button_speed_p: lambda: f"CON@ch spdP {self.edit_speed_p.text()}",
+            self.button_speed_i: lambda: f"CON@ch spdI {self.edit_speed_i.text()}",
+            self.button_speed_d: lambda: f"CON@ch spdD {self.edit_speed_d.text()}",
         }
 
         self.button_to_edit_dict = {
@@ -281,7 +281,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         recv = sendMsg(
             (self.edit_ip_address_control, self.edit_ip_address_camera),
             (self.tcp_connection_control, self.tcp_connection_camera),
-            "ShowCamera\n",
+            "CAM@ShowCamera\n",
             output_edit=self.edit_camera,
             wait_reply=True
         )
