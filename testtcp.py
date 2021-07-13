@@ -17,7 +17,7 @@ def sendMsg(device, msg, output_edit=None, output=True, wait_reply=False):
 
             #print("making connection")
             s.connect(device)
-            s.setblocking(False)
+            #s.setblocking(False)
 
             try:
                 #print("sending message")
@@ -56,11 +56,13 @@ def sendMsg(device, msg, output_edit=None, output=True, wait_reply=False):
     return -1
 
 
-for i in range(2000000):
-    reply = sendMsg("10.20.102.188:502", "init\n", output=False, wait_reply=True)
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    print(f"[{current_time}]: {reply[:-1]}")
+for i in range(100):
+    sendMsg("192.168.137.190:502", f"testtesttest{i}\n", output=False, wait_reply=False)
+    print(i)
+    time.sleep(0.01)
+    #now = datetime.now()
+    #current_time = now.strftime("%H:%M:%S")
+    #print(f"[{current_time}]: {reply[:-1]}")
 #    if (reply != "init\n"):
 #        print("not ok")
 #

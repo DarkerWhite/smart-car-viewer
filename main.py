@@ -64,21 +64,28 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.parameter_button_status_dict = {
             self.button_lane_thres: False,
             self.button_lane_distance: False,
-            self.button_turn_p: False,
-            self.button_turn_d: False,
             self.button_sharp_jitter_thres: False,
             self.button_roundabout_jitter_thres_curve: False,
             self.button_roundabout_jitter_thres_straight: False,
             self.button_car_speed: False,
             self.button_speed_p: False,
             self.button_speed_i: False,
-            self.button_speed_d: False
+            self.button_speed_d: False,
+            self.button_angle_p: False,
+            self.button_angle_i: False,
+            self.button_angle_d: False,
+            self.button_turnn_p: False,
+            self.button_turnn_i: False,
+            self.button_turnn_d: False,
+            self.button_start_point_thres: False,
+            self.button_outbound_thres: False,
+            self.button_slope_row: False,
         }
 
         self.parameter_button_command_dict = {
             # lane thres
             # uint16 pixelMeanThres
-            self.button_lane_thres: lambda: f"CAM@laTh:{int(self.edit_lane_thres.text())}\n",
+            self.button_lane_thres: lambda: f"CAM@laTh:{format(self.edit_lane_thres.text(), '0>3')[:3]}\n",
             # lane distance
             # float detectDistance
             self.button_lane_distance: lambda: f"CAM@laDs:{format(self.edit_lane_distance.text().replace('.', ''), '0>2')[:2]}\n",
@@ -87,33 +94,46 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_sharp_jitter_thres: lambda: f"CAM@ch sJTh {format(self.edit_sharpjitter_thres.text(), '0>3')[:3]}\n",
             # car speed
             # int16 basic_speed
-            self.button_car_speed: lambda: f"CON@Car_Speed:{int(self.edit_car_speed.text())}\n",
+            self.button_car_speed: lambda: f"CON@Car_Speed:{format(self.edit_car_speed.text(), '0>3')[:3]}\n",
 
-            # turn - kp
-            # float kp
-            self.button_turn_p: lambda: f"CON@Turn_Kp:{str(int(float(self.edit_turn_p.text())*1000)).replace('.', '')}\n",
-            # turn - kd
-            self.button_turn_d: lambda: f"CON@Turn_Kd:{str(int(float(self.edit_turn_d.text())*1000)).replace('.', '')}\n",
 
             # roundabout jitter curve thres
             self.button_roundabout_jitter_thres_curve: lambda: f"CAM@ch roJC {format(self.edit_roundabout_jitter_thres_curve.text(), '0>3')[:3]}\n",
             # roundabout jitter straight thres
             self.button_roundabout_jitter_thres_straight: lambda: f"CAM@ch roJS {format(self.edit_roundabout_jitter_thres_straight.text(), '0>3')[:3]}\n",
 
-            self.button_speed_p: lambda: f"CON@ch spdP {self.edit_speed_p.text()}",
-            self.button_speed_i: lambda: f"CON@ch spdI {self.edit_speed_i.text()}",
-            self.button_speed_d: lambda: f"CON@ch spdD {self.edit_speed_d.text()}",
+            self.button_speed_p: lambda: f"CON@Speed_Kp:{format(self.edit_speed_p.text(), '0>3')[:3]}\n",
+            self.button_speed_i: lambda: f"CON@Speed_Ki:{format(self.edit_speed_i.text(), '0>3')[:3]}\n",
+            self.button_speed_d: lambda: f"CON@Speed_Kd:{format(self.edit_speed_d.text(), '0>3')[:3]}\n",
+
+            self.button_angle_p: lambda: f"CON@Angle_Kp:{format(str(int(float(self.edit_angle_p.text())*1000)), '0>4')[:4]}\n",
+            self.button_angle_i: lambda: f"CON@Angle_Ki:{format(str(int(float(self.edit_angle_i.text())*1000)), '0>4')[:4]}\n",
+            self.button_angle_d: lambda: f"CON@Angle_Kd:{format(str(int(float(self.edit_angle_d.text())*1000)), '0>4')[:4]}\n",
+
+            self.button_turnn_p: lambda: f"CON@Turnn_Kp:{format(str(int(float(self.edit_turnn_p.text())*1000)), '0>4')[:4]}\n",
+            self.button_turnn_i: lambda: f"CON@Turnn_Ki:{format(str(int(float(self.edit_turnn_i.text())*1000)), '0>4')[:4]}\n",
+            self.button_turnn_d: lambda: f"CON@Turnn_Kd:{format(str(int(float(self.edit_turnn_d.text())*1000)), '0>4')[:4]}\n",
+
+            self.button_slope_row: lambda: f"CAM@slopeRow:{self.edit_slope_row.text()}\n",
         }
 
         self.button_to_edit_dict = {
             self.button_lane_thres: self.edit_lane_thres,
             self.button_lane_distance: self.edit_lane_distance,
-            self.button_turn_p: self.edit_turn_p,
-            self.button_turn_d: self.edit_turn_d,
             self.button_sharp_jitter_thres: self.edit_sharpjitter_thres,
             self.button_roundabout_jitter_thres_curve: self.edit_roundabout_jitter_thres_curve,
             self.button_roundabout_jitter_thres_straight: self.edit_roundabout_jitter_thres_straight,
-            self.button_car_speed: self.edit_car_speed
+            self.button_car_speed: self.edit_car_speed,
+            self.button_speed_p: self.edit_speed_p,
+            self.button_speed_i: self.edit_speed_i,
+            self.button_speed_d: self.edit_speed_d,
+            self.button_angle_p: self.edit_angle_p,
+            self.button_angle_i: self.edit_angle_i,
+            self.button_angle_d: self.edit_angle_d,
+            self.button_turnn_p: self.edit_turnn_p,
+            self.button_turnn_i: self.edit_turnn_i,
+            self.button_turnn_d: self.edit_turnn_d,
+            self.button_slope_row: self.edit_slope_row,
         }
 
         self.button_sharp_jitter_thres.setEnabled(False)
@@ -124,20 +144,28 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.edit_ip_address_control.setText(self.config['ip']['control_core'])
         self.edit_ip_address_camera.setText(self.config['ip']['camera_core'])
 
-        self.edit_lane_thres.setText(self.config['parameter_camera']['lane_thres'])
-        self.edit_lane_distance.setText(self.config['parameter_camera']['lane_distance'])
-        self.edit_sharpjitter_thres.setText(self.config['parameter_camera']['sharpJitThr'])
-        self.edit_roundabout_jitter_thres_curve.setText(self.config['parameter_camera']['rouJitThrCur'])
-        self.edit_roundabout_jitter_thres_straight.setText(self.config['parameter_camera']['rouJitThrStr'])
-
-        self.edit_turn_p.setText(self.config['parameter_turning_loop']['turn_kp'])
-        self.edit_turn_d.setText(self.config['parameter_turning_loop']['turn_kd'])
+        self.edit_lane_thres.setText(self.config['parameter_lane']['lane_thres'])
+        self.edit_lane_distance.setText(self.config['parameter_lane']['lane_distance'])
+        self.edit_sharpjitter_thres.setText(self.config['parameter_lane']['sharpJitThr'])
+        self.edit_roundabout_jitter_thres_curve.setText(self.config['parameter_lane']['rouJitThrCur'])
+        self.edit_roundabout_jitter_thres_straight.setText(self.config['parameter_lane']['rouJitThrStr'])
 
         self.edit_speed_p.setText(self.config['parameter_speed_loop']['speed_kp'])
         self.edit_speed_i.setText(self.config['parameter_speed_loop']['speed_ki'])
         self.edit_speed_d.setText(self.config['parameter_speed_loop']['speed_kd'])
 
+        self.edit_angle_p.setText(self.config['parameter_angle_loop']['angle_kp'])
+        self.edit_angle_i.setText(self.config['parameter_angle_loop']['angle_ki'])
+        self.edit_angle_d.setText(self.config['parameter_angle_loop']['angle_kd'])
+
+        self.edit_turnn_p.setText(self.config['parameter_turnn_loop']['turnn_kp'])
+        self.edit_turnn_i.setText(self.config['parameter_turnn_loop']['turnn_ki'])
+        self.edit_turnn_d.setText(self.config['parameter_turnn_loop']['turnn_kd'])
+
         self.edit_car_speed.setText(self.config['parameter_control']['car_speed'])
+
+        self.edit_slope_row.setText(self.config['parameter_others']['slopeRow'])
+
 
     def keyPressEvent(self, e):
         if e.key() in self.keyboard_command_dict:
@@ -165,22 +193,44 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         # parameter button
         self.button_lane_thres.clicked.connect(partial(self.handle_parameter_key, self.button_lane_thres))
         self.button_lane_distance.clicked.connect(partial(self.handle_parameter_key, self.button_lane_distance))
-        self.button_turn_p.clicked.connect(partial(self.handle_parameter_key, self.button_turn_p))
-        self.button_turn_d.clicked.connect(partial(self.handle_parameter_key, self.button_turn_d))
         self.button_sharp_jitter_thres.clicked.connect(partial(self.handle_parameter_key, self.button_sharp_jitter_thres))
         self.button_roundabout_jitter_thres_curve.clicked.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_curve))
         self.button_roundabout_jitter_thres_straight.clicked.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_straight))
         self.button_car_speed.clicked.connect(partial(self.handle_parameter_key, self.button_car_speed))
 
+        self.button_speed_p.clicked.connect(partial(self.handle_parameter_key, self.button_speed_p))
+        self.button_speed_i.clicked.connect(partial(self.handle_parameter_key, self.button_speed_i))
+        self.button_speed_d.clicked.connect(partial(self.handle_parameter_key, self.button_speed_d))
+        self.button_angle_p.clicked.connect(partial(self.handle_parameter_key, self.button_angle_p))
+        self.button_angle_i.clicked.connect(partial(self.handle_parameter_key, self.button_angle_i))
+        self.button_angle_d.clicked.connect(partial(self.handle_parameter_key, self.button_angle_d))
+        self.button_turnn_p.clicked.connect(partial(self.handle_parameter_key, self.button_turnn_p))
+        self.button_turnn_i.clicked.connect(partial(self.handle_parameter_key, self.button_turnn_i))
+        self.button_turnn_d.clicked.connect(partial(self.handle_parameter_key, self.button_turnn_d))
+
+        self.button_slope_row.clicked.connect(partial(self.handle_parameter_key, self.button_slope_row))
+
         # bind edit to return key
         self.edit_lane_thres.returnPressed.connect(partial(self.handle_parameter_key, self.button_lane_thres))
         self.edit_lane_distance.returnPressed.connect(partial(self.handle_parameter_key, self.button_lane_distance))
-        self.edit_turn_p.returnPressed.connect(partial(self.handle_parameter_key, self.button_turn_p))
-        self.edit_turn_d.returnPressed.connect(partial(self.handle_parameter_key, self.button_turn_d))
         self.edit_sharpjitter_thres.returnPressed.connect(partial(self.handle_parameter_key, self.button_sharp_jitter_thres))
         self.edit_roundabout_jitter_thres_curve.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_curve))
         self.edit_roundabout_jitter_thres_straight.returnPressed.connect(partial(self.handle_parameter_key, self.button_roundabout_jitter_thres_straight))
         self.edit_car_speed.returnPressed.connect(partial(self.handle_parameter_key, self.button_car_speed))
+
+        self.edit_speed_p.returnPressed.connect(partial(self.handle_parameter_key, self.button_speed_p))
+        self.edit_speed_i.returnPressed.connect(partial(self.handle_parameter_key, self.button_speed_i))
+        self.edit_speed_d.returnPressed.connect(partial(self.handle_parameter_key, self.button_speed_d))
+
+        self.edit_angle_p.returnPressed.connect(partial(self.handle_parameter_key, self.button_angle_p))
+        self.edit_angle_i.returnPressed.connect(partial(self.handle_parameter_key, self.button_angle_i))
+        self.edit_angle_d.returnPressed.connect(partial(self.handle_parameter_key, self.button_angle_d))
+
+        self.edit_turnn_p.returnPressed.connect(partial(self.handle_parameter_key, self.button_turnn_p))
+        self.edit_turnn_i.returnPressed.connect(partial(self.handle_parameter_key, self.button_turnn_i))
+        self.edit_turnn_d.returnPressed.connect(partial(self.handle_parameter_key, self.button_turnn_d))
+
+        self.edit_slope_row.returnPressed.connect(partial(self.handle_parameter_key, self.button_slope_row))
 
     def open_remote_camera(self):
         try:
@@ -204,7 +254,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 wait_reply=True
             )
 
-            if reply_control == "control\n":
+            if reply_control == "control\n" or reply_control == "control\r":
                 self.tcp_connection_control = True
                 self.edit_ip_address_control.setEnabled(False)
                 self.button_connect_control.setText("Disconnect")
@@ -224,7 +274,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 wait_reply=True
             )
 
-            if reply_camera == "camera\n":
+            if reply_camera == "camera\n" or reply_camera == "camera\r":
                 self.tcp_connection_camera = True
                 self.edit_ip_address_camera.setEnabled(False)
                 self.button_connect_camera.setText("Disconnect")
@@ -295,7 +345,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                     "laneCenter": recv[2][:-1].split(" "),
                     "detectLeft": recv[3][:-1].split(" "),
                     "detectRight": recv[4][:-1].split(" "),
-                    "status": recv[5][:-1].split(" ")
+                    "status": recv[5].split(" ")
                 }
             except IndexError:
                 self.edit_camera.setText(f"{getTime()}: Get camera frame failed, index error.")
@@ -310,16 +360,11 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
 
             self.edit_camera.setText(self.string_total)
             self.edit_error.setText(str(int(self.dataDict['status'][0])))
-            self.edit_slope.setText(str(int(self.dataDict['status'][1])))
-            self.edit_sharp_curve_row.setText(str(int(self.dataDict['status'][2])))
-            self.edit_miss_count.setText(str(int(self.dataDict['status'][3])))
-            self.edit_roundabout.setText(str(int(self.dataDict['status'][4])))
-            self.edit_three_way_fork.setText(str(int(self.dataDict['status'][5])))
-            self.edit_jitter_left.setText(str(float(self.dataDict['status'][6]) / 100))
-            self.edit_jitter_right.setText(str(float(self.dataDict['status'][7]) / 100))
-
-            #current_time = time.strftime("%H:%M:%S", time.localtime())
-            #self.label_time.setText(current_time)
+            self.edit_sharp_curve_row.setText(str(int(self.dataDict['status'][1])))
+            self.edit_flag_roundabout.setText(str(int(self.dataDict['status'][2])))
+            self.edit_flag_threeway.setText(str(int(self.dataDict['status'][3])))
+            self.edit_lane_jitter.setText(f"{int(self.dataDict['status'][4])}, {int(self.dataDict['status'][5])}")
+            self.edit_roundaboutarea.setText(f"{int(self.dataDict['status'][6])}, {int(self.dataDict['status'][7])}")
 
             self.button_get_one.setText("Get One Frame")
             self.button_get_one.setEnabled(True)
@@ -331,6 +376,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_get_one.setEnabled(True)
 
             self.flag_get_frame_mode = 0
+        time.sleep(0.2)
 
     def scan_and_send_command(self):
         for i in self.keyboard_status_dict:
@@ -367,20 +413,27 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
         self.config['ip']['control_core'] = self.edit_ip_address_control.text()
         self.config['ip']['camera_core'] = self.edit_ip_address_camera.text()
 
-        self.config['parameter_camera']['lane_thres'] = self.edit_lane_thres.text()
-        self.config['parameter_camera']['lane_distance'] = self.edit_lane_distance.text()
-        self.config['parameter_camera']['sharpJitThr'] = self.edit_sharpjitter_thres.text()
-        self.config['parameter_camera']['rouJitThrCur'] = self.edit_roundabout_jitter_thres_curve.text()
-        self.config['parameter_camera']['rouJitThrStr'] = self.edit_roundabout_jitter_thres_straight.text()
-
-        self.config['parameter_turning_loop']['turn_kp'] = self.edit_turn_p.text()
-        self.config['parameter_turning_loop']['turn_kd'] = self.edit_turn_d.text()
+        self.config['parameter_lane']['lane_thres'] = self.edit_lane_thres.text()
+        self.config['parameter_lane']['lane_distance'] = self.edit_lane_distance.text()
+        self.config['parameter_lane']['sharpJitThr'] = self.edit_sharpjitter_thres.text()
+        self.config['parameter_lane']['rouJitThrCur'] = self.edit_roundabout_jitter_thres_curve.text()
+        self.config['parameter_lane']['rouJitThrStr'] = self.edit_roundabout_jitter_thres_straight.text()
 
         self.config['parameter_speed_loop']['speed_kp'] = self.edit_speed_p.text()
         self.config['parameter_speed_loop']['speed_ki'] = self.edit_speed_i.text()
         self.config['parameter_speed_loop']['speed_kd'] = self.edit_speed_d.text()
 
+        self.config['parameter_turning_loop']['turnn_kp'] = self.edit_turnn_p.text()
+        self.config['parameter_turning_loop']['turnn_ki'] = self.edit_turnn_i.text()
+        self.config['parameter_turning_loop']['turnn_kd'] = self.edit_turnn_d.text()
+
+        self.config['parameter_angle_loop']['angle_kp'] = self.edit_angle_p.text()
+        self.config['parameter_angle_loop']['angle_ki'] = self.edit_angle_i.text()
+        self.config['parameter_angle_loop']['angle_kd'] = self.edit_angle_d.text()
+
         self.config['parameter_control']['car_speed'] = self.edit_car_speed.text()
+        self.config['parameter_others']['slopeRow'] = self.edit_slope_row.text()
+
 
         with open("config.ini", "w") as f:
             self.config.write(f)

@@ -33,6 +33,7 @@ def recvall(sock, n):
         if not packet:
             return None
         data += packet
+        print(f"!!!!!!!!!!!{len(data)}!!!!!!!!!!!")
     return data
 
 
