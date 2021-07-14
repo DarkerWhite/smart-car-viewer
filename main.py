@@ -110,9 +110,9 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             self.button_angle_i: lambda: f"CON@Angle_Ki:{format(str(int(float(self.edit_angle_i.text())*1000)), '0>4')[:4]}\n",
             self.button_angle_d: lambda: f"CON@Angle_Kd:{format(str(int(float(self.edit_angle_d.text())*1000)), '0>4')[:4]}\n",
 
-            self.button_turnn_p: lambda: f"CON@Turnn_Kp:{format(str(int(float(self.edit_turnn_p.text())*1000)), '0>4')[:4]}\n",
-            self.button_turnn_i: lambda: f"CON@Turnn_Ki:{format(str(int(float(self.edit_turnn_i.text())*1000)), '0>4')[:4]}\n",
-            self.button_turnn_d: lambda: f"CON@Turnn_Kd:{format(str(int(float(self.edit_turnn_d.text())*1000)), '0>4')[:4]}\n",
+            self.button_turnn_p: lambda: f"CON@Turnn_Kp:{format(str(int(float(self.edit_turnn_p.text())*100)), '0>4')[:4]}\n",
+            self.button_turnn_i: lambda: f"CON@Turnn_Ki:{format(str(int(float(self.edit_turnn_i.text())*100)), '0>4')[:4]}\n",
+            self.button_turnn_d: lambda: f"CON@Turnn_Kd:{format(str(int(float(self.edit_turnn_d.text())*100)), '0>4')[:4]}\n",
 
             self.button_slope_row: lambda: f"CAM@slopeRow:{self.edit_slope_row.text()}\n",
         }
@@ -333,7 +333,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             (self.tcp_connection_control, self.tcp_connection_camera),
             "CAM@ShowCamera\n",
             output_edit=self.edit_camera,
-            wait_reply=False
+            wait_reply=True
         )
         if recv != -1:
             print(recv)
@@ -386,7 +386,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                     (self.tcp_connection_control, self.tcp_connection_camera),
                     self.keyboard_command_dict[i],
                     output_edit=self.edit_log_control,
-                    wait_reply=False
+                    wait_reply=True
                 )
                 self.keyboard_status_dict[i] = False
 
@@ -397,7 +397,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                     (self.tcp_connection_control, self.tcp_connection_camera),
                     self.parameter_button_command_dict[i](),
                     output_edit=self.edit_log_parameter,
-                    wait_reply=False
+                    wait_reply=True
                 )
                 if recv == -1:
                     print("change parameter failed")
