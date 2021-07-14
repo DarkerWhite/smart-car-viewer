@@ -251,7 +251,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 (self.tcp_connection_control, self.tcp_connection_camera),
                 "CON@init\n",
                 output_edit=self.edit_log_control,
-                wait_reply=True
+                wait_reply=False
             )
 
             if reply_control == "control\n" or reply_control == "control\r":
@@ -271,7 +271,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 (self.tcp_connection_control, self.tcp_connection_camera),
                 "CAM@init\n",
                 output_edit=self.edit_log_control,
-                wait_reply=True
+                wait_reply=False
             )
 
             if reply_camera == "camera\n" or reply_camera == "camera\r":
@@ -333,7 +333,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
             (self.tcp_connection_control, self.tcp_connection_camera),
             "CAM@ShowCamera\n",
             output_edit=self.edit_camera,
-            wait_reply=True
+            wait_reply=False
         )
         if recv != -1:
             print(recv)
@@ -386,7 +386,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                     (self.tcp_connection_control, self.tcp_connection_camera),
                     self.keyboard_command_dict[i],
                     output_edit=self.edit_log_control,
-                    wait_reply=True
+                    wait_reply=False
                 )
                 self.keyboard_status_dict[i] = False
 
@@ -397,7 +397,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                     (self.tcp_connection_control, self.tcp_connection_camera),
                     self.parameter_button_command_dict[i](),
                     output_edit=self.edit_log_parameter,
-                    wait_reply=True
+                    wait_reply=False
                 )
                 if recv == -1:
                     print("change parameter failed")

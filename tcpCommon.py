@@ -42,11 +42,11 @@ def sendMsg(device, status, msg, output_edit=None, wait_reply=False):
     msg = msg.split("@")
     status = status[destination_to_index[msg[0]]]
     device = device[destination_to_index[msg[0]]]
-    msg = msg[1]
+    msg = msg[1][:-1] + "\r\n"
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(1)
+            s.settimeout(2)
 
             if output_edit:
                 output_edit.append(f"{getTime()}: Send {msg[:-1]}")
