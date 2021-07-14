@@ -251,7 +251,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 (self.tcp_connection_control, self.tcp_connection_camera),
                 "CON@init\n",
                 output_edit=self.edit_log_control,
-                wait_reply=False
+                wait_reply=True
             )
 
             if reply_control == "control\n" or reply_control == "control\r":
@@ -271,7 +271,7 @@ class Ui_MainWindow_Son(QtWidgets.QMainWindow, Ui_MainWindow):
                 (self.tcp_connection_control, self.tcp_connection_camera),
                 "CAM@init\n",
                 output_edit=self.edit_log_control,
-                wait_reply=False
+                wait_reply=True
             )
 
             if reply_camera == "camera\n" or reply_camera == "camera\r":
